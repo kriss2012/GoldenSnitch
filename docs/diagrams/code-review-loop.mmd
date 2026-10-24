@@ -1,0 +1,6 @@
+flowchart TD
+ A[Pick ticket] --> B[Confirm AC + deps] --> C[Smallest coherent change] --> D[ruff + pytest affected tests]
+ D --> E[Review diff vs ticket/spec] --> F[Security + data-integrity pass] --> G[Integration/API tests]
+ G --> H[Record findings with severity + file refs] --> I{P0/P1 open?}
+ I -- yes --> J[Fix] --> K[Re-run affected tests] --> H
+ I -- no --> L[Verify AC] --> M[Update docs + traceability] --> N[Mark ticket only with evidence] --> O[Merge + full regression]
