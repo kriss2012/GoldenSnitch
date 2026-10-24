@@ -1,0 +1,7 @@
+flowchart LR
+  UI[Static UI index.html] -->|JSON/HTTP| API[FastAPI main.py]
+  API --> SC[scoring.py + catalog.py]
+  API --> FT[fit.py]
+  API --> IMP[CSV import validator]
+  SC & FT & IMP --> DB[(SQLite)]
+  SEED[seed.py synthetic generator] --> DB
