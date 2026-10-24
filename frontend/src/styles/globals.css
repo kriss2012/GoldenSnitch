@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --void: #090014;
+  --surface: #140026;
+  --surface-raised: #20023b;
+  --plum: #620a96;
+
+  /* Bright Gamified Violet & Electric Gaming Accents */
+  --brand: #5662f6;
+  --violet: #9b30ff;
+  --violet-glow: #b24bf3;
+  --violet-pressed: #7d1fd4;
+  --lilac: #d187ff;
+
+  --text: #f8f0ff;
+  --text-muted: #c8b0e8;
+  --border: #3f1568;
+  --border-bright: #6924aa;
+
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    background-color: var(--void);
+    background-image: 
+      radial-gradient(circle at 50% -10%, rgba(155, 48, 255, 0.28) 0%, transparent 60%),
+      radial-gradient(circle at 100% 50%, rgba(86, 98, 246, 0.16) 0%, transparent 45%),
+      radial-gradient(circle at 0% 85%, rgba(120, 15, 190, 0.18) 0%, transparent 45%);
+    background-attachment: fixed;
+    color: var(--text);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    color: var(--text);
+  }
+
+  /* Accessible focus rings */
+  :focus-visible {
+    outline: 2px solid var(--lilac);
+    outline-offset: 2px;
+  }
+
+  /* Prevent unintended body overflow */
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbar for data tables and panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--plum);
+}
+
+/* Tabular figures */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-delay: 0s !important;
+    transition-duration: 0s !important;
+  }
+}
