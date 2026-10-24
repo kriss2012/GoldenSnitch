@@ -1,0 +1,5 @@
+# Code review policy
+Every change tied to a ticket is reviewed against that ticket's acceptance criteria before the ticket moves to TESTED. A reviewer may be a person or an AI assistant; an AI review is **input, not approval** — each finding must be reproduced or rejected with a written reason, and an AI reviewer must only judge code it was actually given.
+**Severity** (by real impact): **P0** security breach, data loss, release blocker · **P1** broken core function, wrong ranking, invalid-data acceptance, major regression · **P2** significant usability/maintainability/non-critical defect · **P3** minor.
+**Gates:** no open P0/P1 at release; P2 needs a ticket or documented acceptance; failing tests are never skipped to get green. Changes to weights, schema, API or acceptance criteria require an impact check of tickets, tests and docs (update `FUNCTIONAL_REQUIREMENTS.md` and tests in the same change).
+**Independence:** record whether the reviewer is the author. Self-review is allowed for the hackathon but must be labelled as such.
