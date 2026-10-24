@@ -1,0 +1,16 @@
+erDiagram
+  games ||--o{ players : has
+  games ||--o{ rosters : has
+  players ||--o{ match_history : "last 12 ratings"
+  rosters ||--o{ roster_members : has
+  players ||--o| roster_members : "at most one roster"
+  recommendations {text id PK
+    text payload}
+  players {text id PK
+    text game FK
+    text role
+    text secondary_roles
+    int matches_played
+    text metrics
+    text provenance
+    int synthetic}
