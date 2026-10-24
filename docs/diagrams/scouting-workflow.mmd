@@ -1,0 +1,10 @@
+flowchart TD
+  A[Squads: roster + open role] --> B[Run scouting]
+  B --> C{Eligible free agents?}
+  C -- no --> C1[Empty state]
+  C -- yes --> D[Percentile normalise in game+role pool]
+  D --> E[Weighted role score + evidence index]
+  E --> F[Estimated roster fit]
+  F --> G[Ranked table]
+  G --> H[Why panel] & I[Compare 2-5] & J[Add to roster]
+  J --> K[Squads: coverage updated]
