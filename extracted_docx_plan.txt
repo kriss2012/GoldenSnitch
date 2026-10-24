@@ -1,0 +1,1169 @@
+GOLDEN SNITCHFinal Product Build Plan
+
+Detailed implementation phases for frontend, backend, authentication, notifications, data, scouting intelligence, responsive QA, and deployment.
+
+Golden Snitch — Final Product Build Roadmap
+
+Purpose
+
+This document pack is the execution plan for turning the existing Golden Snitch repository into a coherent full-stack esports scouting and multi-roster intelligence product. It is written for implementation by a coding agent or development team. The instructions require inspecting the current repository before changing it; the architecture below is a target, not an assertion that all listed components already exist.
+
+Product outcome
+
+A user can register or sign in, access only authorized workspace data, scout candidates for a game and role, understand each recommendation's evidence and confidence, compare candidates, manage multiple rosters, simulate recruitment impact, maintain a scouting pipeline, receive persistent in-app notifications, export reports, and sign out securely.
+
+Design authority
+
+Target architecture
+
+Confirm actual repository choices before adopting these defaults:
+
+Frontend: React + Vite + TypeScript + Tailwind CSS + React Router.
+
+Data visualization: Recharts.
+
+Icons: Lucide React.
+
+Backend: Python 3.12 + FastAPI + Pydantic.
+
+Persistence: SQLAlchemy and SQLite for local MVP; preserve an existing supported database if already integrated.
+
+Tests: pytest for backend; Vitest/React Testing Library for frontend; Playwright for end-to-end and responsive checks where feasible.
+
+Auth: preferably opaque server-managed sessions in HttpOnly cookies, with CSRF protection for cookie-authenticated mutations. Use an alternative only if the current architecture justifies it.
+
+Local development configuration through environment variables.
+
+Build principles
+
+Inspect first; do not overwrite functioning code.
+
+Migrate the existing database safely; never delete user data to make a migration pass.
+
+Backend is the source of truth for private data, authorization, notifications, and persisted product records.
+
+Do not claim live AI, live esports API data, email delivery, or push notifications unless implemented and verified.
+
+Keep simulated datasets clearly labeled.
+
+Separate UI components from domain logic and API calls.
+
+Each phase must pass its exit gate before the next phase is treated as complete.
+
+Record commands actually run and test outcomes honestly.
+
+Phases
+
+| Phase | Name | Main output |
+
+|---|---|---|
+
+| 0 | Repository audit and recovery | Verified baseline and root-cause report |
+
+| 1 | Product requirements and architecture | Scope, roles, API contracts, decisions |
+
+| 2 | Environment and developer workflow | Repeatable local setup |
+
+| 3 | Data model and migrations | Persistent domain schema |
+
+| 4 | Authentication and authorization | Secure account/session lifecycle |
+
+| 5 | Core backend APIs | Players, matches, rosters, watchlists |
+
+| 6 | Scouting intelligence | Role scoring, confidence, evidence |
+
+| 7 | Frontend integration and responsive UI | Connected screens and design consistency |
+
+| 8 | Notification center | Persistent event-driven in-app notifications |
+
+| 9 | Reports, exports, and settings | Working secondary product workflows |
+
+| 10 | Testing, security, and responsive QA | Verified end-to-end product |
+
+| 11 | Deployment and handover | Deployable build and operational docs |
+
+Definition of done
+
+A feature is not complete merely because it renders. It must:
+
+Have a defined user story and acceptance criteria.
+
+Validate input on the backend.
+
+Enforce authentication and permissions where applicable.
+
+Persist data where persistence is required.
+
+Display loading, empty, success, and failure states.
+
+Be usable with keyboard and touch.
+
+Be tested at relevant levels.
+
+Have documented limitations and setup requirements.
+
+Critical end-to-end acceptance journey
+
+User registers with a valid email and password.
+
+User signs in and the frontend retrieves the authenticated profile from the backend.
+
+User opens a vacancy and ranks role-compatible players.
+
+The result includes score components, confidence, sample size, and evidence-based explanation.
+
+User shortlists a candidate or performs a roster action.
+
+Backend commits the operation and creates a relevant notification only after success.
+
+Notification appears with the correct unread count.
+
+User marks it read; the change persists after refresh.
+
+User signs out.
+
+The revoked session cannot access protected frontend routes or private APIs.
+
+A different user cannot access the first user's private records by changing IDs.
+
+Release gate
+
+Do not label the product final until the build passes, core flows are verified against the real backend, database migrations work on a clean and existing database, and known gaps are documented.
+
+Phase 0 — Repository Audit and Recovery
+
+Goal
+
+Understand the actual project structure and reproduce the known failures before making broad changes.
+
+Tasks
+
+Inspect the repository tree, package manifests, backend entrypoint, API routes, models, migrations, tests, environment files, and README.
+
+Identify the frontend framework and installed Tailwind version. Do not blindly replace configuration.
+
+Identify the backend framework, database access layer, and existing API conventions.
+
+Locate every notification control and trace its click handler, state, API call, and response rendering.
+
+Trace login/logout state, route protection, current-user data, and session persistence.
+
+Search for mock arrays, hardcoded user identities, fake success messages, and localStorage used for authoritative business data.
+
+Run the existing frontend build, backend tests, and available lint/type checks; record current failures.
+
+Inspect the current database schema and create a backup before any migration work.
+
+Check `.gitignore` for `.env`, databases, virtual environments, build artifacts, and secrets.
+
+Produce an audit report with severity, root cause, files affected, and proposed repair.
+
+Environment recovery
+
+The project has previously reported that the virtual environment's Python could not import pip. Verify before changing it:
+
+cd "C:\D Drive\scoutgrid"
+
+.\.venv\Scripts\python.exe --version
+
+.\.venv\Scripts\python.exe -m pip --version
+
+If pip is missing, try:
+
+.\.venv\Scripts\python.exe -m ensurepip --upgrade
+
+.\.venv\Scripts\python.exe -m pip --version
+
+Then install from the repository's actual dependency file. Do not install random packages before inspecting `requirements.txt`, `pyproject.toml`, or lock files.
+
+Deliverables
+
+`docs/audit/REPOSITORY_AUDIT.md`
+
+Existing build/test baseline
+
+Data backup confirmation
+
+List of frontend/backend routes
+
+Notification and auth root-cause findings
+
+Dependency/environment issue log
+
+Exit criteria
+
+The team can explain why notifications do not work.
+
+The team can explain what currently authenticates a user, if anything.
+
+Existing data is protected.
+
+No large refactor begins before the current architecture is understood.
+
+Phase 1 — Requirements, Permissions, and Architecture
+
+Goal
+
+Convert the product vision into implementable user stories and stable contracts.
+
+Core user journeys
+
+Register, log in, restore a valid session, view profile, and log out.
+
+Search and filter the player pool.
+
+Configure a game/role vacancy and rank eligible candidates.
+
+Inspect candidate score factors, evidence, sample size, and confidence.
+
+Compare two or three compatible players.
+
+Create and update rosters and assign players to roles.
+
+Simulate a recruitment change and inspect assumptions.
+
+Manage a scouting watchlist and pipeline stage.
+
+Receive and mark persistent in-app notifications as read.
+
+Export reports and manage permitted settings.
+
+Role and permission matrix
+
+Define the real permission matrix before coding. Suggested roles:
+
+`admin`: user and organization administration, all permitted workspace operations.
+
+`manager`: roster, vacancy, and recruitment operations.
+
+`scout`: candidate evaluation, notes, and shortlists.
+
+`analyst`: performance analysis and reports.
+
+`viewer`: read-only access to permitted data.
+
+The backend must enforce permissions on every protected endpoint. Hiding a button is not authorization. If multi-organization workspaces are in scope, define organization membership and scope every query by authorized organization.
+
+Architecture decisions to document
+
+Create `docs/architecture/DECISIONS.md` covering:
+
+Database and ORM choice.
+
+Session/cookie approach and CSRF strategy.
+
+Frontend API client strategy.
+
+Migration tool.
+
+Scoring location and versioning.
+
+Notification delivery model.
+
+File/export approach.
+
+Test strategy.
+
+Which features are simulated versus connected to real providers.
+
+API contract rules
+
+Prefix APIs consistently, e.g. `/api/v1`.
+
+Use typed request and response schemas.
+
+Define pagination conventions.
+
+Define consistent error response shapes.
+
+Never return password hashes, session secrets, reset tokens, or private fields.
+
+Use UTC timestamps in API responses.
+
+Document ownership and role checks per endpoint.
+
+Deliverables
+
+`docs/requirements/USER_STORIES.md`
+
+`docs/requirements/ACCEPTANCE_CRITERIA.md`
+
+`docs/architecture/DECISIONS.md`
+
+`docs/architecture/API_CONTRACTS.md`
+
+Permission matrix and scope decisions
+
+Exit criteria
+
+No implementation team member has to guess which user can perform which operation, where data is stored, or what an endpoint returns.
+
+Phase 2 — Environment and Developer Workflow
+
+Goal
+
+Make frontend, backend, and tests repeatably runnable on a developer machine.
+
+Tasks
+
+Preserve existing working configuration and dependency versions.
+
+Confirm Python and Node versions required by the actual manifests.
+
+Restore the existing Python virtual environment if possible; do not delete it by default.
+
+Install dependencies only from the project’s manifest/lockfile.
+
+Create `.env.example` files with placeholders only.
+
+Ensure `.env`, database files containing private data, tokens, and secrets are ignored by Git.
+
+Configure the frontend API base URL via environment variables.
+
+Configure backend CORS for explicit development and production origins.
+
+Add clear startup commands to the README.
+
+Add health-check and database connectivity checks appropriate to the chosen stack.
+
+Example frontend configuration
+
+`VITE_API_BASE_URL=http://127.0.0.1:8000`
+
+Example backend configuration
+
+`APP_ENV=development`
+
+`FRONTEND_ORIGIN=http://localhost:5173`
+
+`DATABASE_URL=sqlite:///./scoutgrid.db`
+
+Use actual variable names consistently throughout the application. Do not put production secrets in examples.
+
+Suggested local workflow
+
+Frontend:
+
+npm install
+
+npm run dev
+
+npm run build
+
+Backend commands must be derived from the actual project and documented in README, for example using the installed ASGI server and actual app module. Do not invent a module path before inspecting it.
+
+Deliverables
+
+Working local setup
+
+`.env.example` files
+
+Dependency/lock files updated only as necessary
+
+README startup instructions
+
+Health endpoint or equivalent status check
+
+No secrets committed
+
+Exit criteria
+
+A developer can clone the project, configure environment variables, install dependencies, start the backend and frontend, and understand any external setup requirements.
+
+Phase 3 — Database Models and Migrations
+
+Goal
+
+Make persistent product data reliable and protect existing records.
+
+Inspect first
+
+Review the existing schema and ORM models. Reuse equivalent tables where possible instead of creating duplicates.
+
+Suggested entities
+
+User
+
+Organization/workspace and membership, if multi-tenant scope is required
+
+Session or refresh-session record
+
+Password reset token
+
+Player
+
+Match
+
+Roster
+
+Roster membership/role assignment
+
+Vacancy
+
+Scouting evaluation
+
+Scoring configuration/version
+
+Watchlist entry
+
+Shortlist and scouting note
+
+Notification
+
+Audit event for security-sensitive actions
+
+Data integrity requirements
+
+Primary keys and foreign keys.
+
+Unique normalized email.
+
+Constraints for valid statuses and numeric ranges.
+
+Indexes for user ownership, roster membership, notification unread state, player/game/role filters, and common time queries.
+
+UTC timestamps.
+
+Transactions for multi-record operations.
+
+Referential integrity and explicit delete behavior.
+
+Avoid storing duplicated computed fields unless there is a documented reason and update strategy.
+
+Migration requirements
+
+Back up the current development database.
+
+Add a migration tool compatible with the actual ORM.
+
+Create an initial migration if none exists, without deleting existing data.
+
+Test migration against a clean temporary database.
+
+Test migration against a copy of the existing database.
+
+Verify row counts and key relationships after migration.
+
+Document rollback or recovery limitations.
+
+Never use a destructive “drop all tables” approach against the user's existing database.
+
+Seed data
+
+Use deterministic fictional demo players, matches, and rosters. Mark records as simulated or imported. Do not represent synthetic data as official esports statistics.
+
+Deliverables
+
+Models and schema constraints
+
+Versioned migrations
+
+Safe seed command
+
+Migration test results
+
+Database backup/recovery notes
+
+Exit criteria
+
+A fresh database can be initialized, existing data can be migrated safely, and invalid relationships are rejected.
+
+Phase 4 — Authentication and Authorization
+
+Goal
+
+Implement a real account lifecycle. Do not simulate login with a frontend boolean.
+
+Required frontend routes
+
+`/login`
+
+`/register`
+
+`/forgot-password`
+
+`/reset-password`
+
+Protected product routes such as `/dashboard`
+
+Required backend endpoints
+
+`POST /api/v1/auth/register`
+
+`POST /api/v1/auth/login`
+
+`GET /api/v1/auth/me`
+
+`POST /api/v1/auth/logout`
+
+`POST /api/v1/auth/forgot-password`
+
+`POST /api/v1/auth/reset-password`
+
+Session refresh/revocation endpoints only if required by the selected architecture.
+
+Security implementation
+
+Prefer opaque, random server-managed sessions in `HttpOnly` cookies for a browser application, unless the existing architecture justifies another design. Configure `Secure` in HTTPS production, an appropriate `SameSite` policy, expiry, narrow scope, and CSRF protections for state-changing cookie-authenticated requests.
+
+Use a reputable password hashing library and modern password hashing such as Argon2id. Never store plaintext passwords or reversible password encryption.
+
+Implement:
+
+Normalized email handling and duplicate rejection.
+
+Generic invalid-credentials responses.
+
+Login rate limiting.
+
+Session expiry and revocation.
+
+Session rotation after authentication/privilege changes.
+
+Backend role checks and ownership checks.
+
+Safe CORS configuration.
+
+No secrets in source code or logs.
+
+A controlled first-admin bootstrap process.
+
+If JWTs are already used, review token expiry, refresh rotation, revocation, and storage rather than mixing two session systems without a design.
+
+Password reset
+
+Generate cryptographically random, single-use, expiring reset tokens. Store a hash of the token where practical. Never reveal whether an email is registered in public responses. In development, expose a safe local-only method for inspecting reset links; in production, use a configured email provider. Clearly report when email delivery is not configured.
+
+Frontend requirements
+
+Form validation and helpful errors.
+
+Show/hide password control.
+
+Loading and disabled submission states.
+
+Session restoration from `/auth/me`.
+
+Protected-route redirects.
+
+Clear private client caches on logout.
+
+Logout must revoke the server session, not only navigate away.
+
+Profile menu shows the real authenticated user's name, email, and role.
+
+Tests
+
+Register, duplicate register, login, invalid login.
+
+Current-user endpoint.
+
+Protected endpoint without session.
+
+Logout revocation.
+
+Expired session.
+
+Password reset expiry/reuse.
+
+Role and ownership enforcement.
+
+Cross-user access attempts.
+
+Exit criteria
+
+A logged-out user cannot access private APIs. Logging out invalidates the session. Every protected endpoint checks the authenticated principal and permissions.
+
+Phase 5 — Core Backend APIs and Domain Operations
+
+Goal
+
+Make players, matches, rosters, vacancies, watchlists, and scoring configurations available through validated APIs.
+
+API areas
+
+Adapt names to the existing conventions:
+
+Players: list, search, filter, detail.
+
+Matches: list by player/roster and relevant details.
+
+Rosters: list, create, detail, update, membership management.
+
+Vacancies: create, update, close, list.
+
+Watchlist: add, update stage/notes, remove/archive.
+
+Shortlists: create and manage candidate selections.
+
+Scoring configuration: read/update with permission checks.
+
+Scouting: rank candidates and retrieve evaluation details.
+
+Domain rules
+
+Validate game and role compatibility.
+
+Prevent duplicate roster memberships where disallowed.
+
+Verify that the caller has access to the organization/workspace and resource.
+
+Use transactions for roster membership changes.
+
+Avoid returning private notes to unauthorized users.
+
+Apply pagination and limits to list endpoints.
+
+Validate numeric score ranges and supported metric keys.
+
+Define explicit behavior for missing/deleted resources.
+
+Use server-side scoring as the source of truth.
+
+API client integration
+
+Create a central frontend API client with:
+
+Configurable base URL.
+
+Cookie credentials if using cookie sessions.
+
+Consistent error parsing.
+
+Request cancellation or timeout behavior where appropriate.
+
+Typed request/response models.
+
+Safe handling of `401`, `403`, `404`, `409`, `422`, and `5xx`.
+
+No silent fallback to fake data when the backend fails.
+
+Deliverables
+
+Domain service layer
+
+Validated endpoints and response schemas
+
+API documentation/OpenAPI
+
+Frontend service modules
+
+Backend tests and frontend integration tests
+
+Exit criteria
+
+Core data shown by the frontend comes from the backend, and successful mutations persist after reload.
+
+Phase 6 — Scouting Intelligence and Explainable Ranking
+
+Goal
+
+Provide consistent, role-specific, evidence-backed candidate ranking.
+
+Scoring
+
+Use normalized factor scores on a 0–100 scale. Store a scoring formula version with each evaluation. Keep the weights configurable and validate their total.
+
+Illustrative IGL weights:
+
+Mid-round decision quality: 25%
+
+Calling impact: 25%
+
+Team coordination: 20%
+
+Tactical adaptability: 15%
+
+Performance consistency: 10%
+
+Mechanical contribution: 5%
+
+These are demo assumptions, not an industry-standard formula. Provide separate role/game-specific factors. Do not compare raw scores across different games as if they were directly equivalent.
+
+Confidence
+
+Confidence must be separate from Talent Index. Consider sample size, metric completeness, recency, and performance stability. Initial configurable demo thresholds may be fewer than 10 matches = low, 10–29 = medium, 30+ = high. Label these as product assumptions.
+
+Recommendation response
+
+Return:
+
+Candidate identity and game/role.
+
+Overall Talent Index.
+
+Factor values and weights.
+
+Confidence label and reasons.
+
+Valid match count.
+
+Data completeness.
+
+Evidence-based strengths.
+
+Risks and missing data.
+
+Formula version.
+
+Data source label.
+
+Explanation quality
+
+Every explanation must point to a metric or data fact. Do not invent causal claims such as “this IGL will guarantee wins.” If calling impact is observational, state that association does not prove causation.
+
+Synergy simulation
+
+Define the formula and its limitations. Include role coverage, complementary strengths, historical coordination where available, and performance consistency. Label projected scores as simulated estimates, not guaranteed win-rate changes.
+
+Tests
+
+Weight validation and normalization.
+
+Correct role/game formula selection.
+
+Deterministic output for deterministic input.
+
+Insufficient sample-size handling.
+
+Missing metrics.
+
+Sorting and tie behavior.
+
+Confidence separate from score.
+
+Evidence references match the values displayed.
+
+Exit criteria
+
+A manager can choose a game, role, and vacancy, rank candidates, inspect why the candidates rank as they do, and see confidence and sample size without fabricated claims.
+
+Goal
+
+Connect the React application to real APIs and complete the UI consistently across routes and devices.
+
+Design system
+
+Text `#F3E8FF`
+
+Required routes
+
+Dashboard
+
+Scouting workspace
+
+Player database and profile
+
+Player comparison
+
+Rosters and roster details
+
+Synergy simulator
+
+Watchlist/pipeline
+
+Reports
+
+Settings
+
+Login/register/password reset
+
+Integration rules
+
+Use backend data for authenticated identity, players, rosters, watchlists, notifications, and persisted settings.
+
+Keep API logic in service modules, not scattered through UI components.
+
+Show loading, empty, error, and success states.
+
+Avoid fake success toasts.
+
+Refresh or invalidate cached data after successful mutations.
+
+Clear private cached data after logout.
+
+Use accessible forms, dialogs, menus, and tables.
+
+Android responsive checks
+
+Test widths including 320, 360, 390, 412, 600, 768, 960, 1024, 1366, and 1920 CSS pixels. Include portrait and landscape. Check keyboard-open forms, long handles, empty results, modal height, charts, tables, touch targets, and navigation.
+
+Do not force wide tables into tiny cards without preserving essential data. Use compact candidate rows on mobile and contain intentional horizontal scrolling within table components.
+
+Exit criteria
+
+Every visible primary control has a real action. Core data is backend-connected. Layouts remain usable on supported Android and desktop viewports.
+
+Phase 8 — Persistent In-App Notification Center
+
+Goal
+
+Repair the currently nonfunctional notification option and connect it to real application events.
+
+Suggested model
+
+`id`
+
+`user_id`
+
+`type`
+
+`title`
+
+`message`
+
+`resource_type` (nullable)
+
+`resource_id` (nullable)
+
+`is_read`
+
+`created_at`
+
+`read_at` (nullable)
+
+Add foreign keys and indexes for recipient, unread state, and creation time. Use the existing model if equivalent functionality exists.
+
+API endpoints
+
+`GET /api/v1/notifications` — paginated current-user list.
+
+`GET /api/v1/notifications/unread-count`
+
+`PATCH /api/v1/notifications/{id}/read`
+
+`POST /api/v1/notifications/mark-all-read`
+
+Every endpoint requires authentication and verifies ownership. Never allow a user to read or mutate another user's notification by changing an ID.
+
+Frontend behavior
+
+Bell opens/closes a dropdown or mobile-friendly panel.
+
+Badge shows unread count.
+
+List displays title, message, time, category, read state.
+
+Individual mark-as-read works.
+
+Mark-all-as-read works.
+
+Related-resource navigation works.
+
+Loading, empty, and error states exist.
+
+Outside click and Escape close the panel where appropriate.
+
+State refreshes after successful backend operations.
+
+Read state survives page reload.
+
+Event integration
+
+Generate notifications only after successful committed actions, such as:
+
+Candidate added to shortlist.
+
+Vacancy created.
+
+Roster changed.
+
+Candidate pipeline stage updated.
+
+Scouting analysis completed.
+
+Avoid duplicate events on retry where possible. Do not create notifications for failed actions. Do not claim push notifications or email delivery unless separately implemented.
+
+Tests
+
+Test unread count, pagination, ownership, mark one, mark all, persistence, missing notification, duplicate event behavior, and event creation after successful operations.
+
+Exit criteria
+
+The user can perform a real action, see a persisted notification, mark it read, refresh the browser, and see the correct state. A different user cannot access it.
+
+Phase 9 — Reports, Exports, and Settings
+
+Goal
+
+Complete secondary workflows without undermining data integrity.
+
+Reports
+
+Support:
+
+Candidate ranking report.
+
+Player comparison report.
+
+Roster health report.
+
+Synergy analysis report.
+
+Watchlist report.
+
+Provide CSV and JSON exports where appropriate and print-friendly summaries. Correctly escape CSV values. Label simulated/imported data and include export timestamp, filters, and scoring version when relevant.
+
+Enforce backend authorization before generating reports containing private workspace data. If export generation is client-side, use only data the user is authorized to access and test the output format.
+
+Settings
+
+Include:
+
+Workspace name and defaults.
+
+Default game/season.
+
+Scoring weights and formula version.
+
+Match confidence thresholds.
+
+Table density and reduced-motion preferences.
+
+Notification preferences if supported.
+
+Demo data information and reset action.
+
+Validate scoring weights server-side if stored centrally. Do not let an unprivileged user alter organization-wide methodology.
+
+Reset behavior
+
+A demo reset must be explicitly confirmed, must not delete user-created production data, and must only operate in a clearly identified development/demo environment. Prefer a controlled seed reset over dropping all tables.
+
+Exit criteria
+
+Exports are valid and appropriately scoped. Settings persist. Privileged settings cannot be modified by unauthorized users.
+
+Phase 10 — Testing, Security, and Responsive QA
+
+Goal
+
+Verify real behavior, not just whether screens render.
+
+Test layers
+
+Unit tests: scoring, validation, formatting, permissions.
+
+Backend integration tests: database and API behavior.
+
+Frontend component tests: forms, dropdowns, states.
+
+End-to-end tests: full user journeys.
+
+Responsive visual QA: representative viewport sizes.
+
+Build and runtime checks.
+
+Critical end-to-end journey
+
+Register.
+
+Log in.
+
+Retrieve current user.
+
+Rank candidates for a vacancy.
+
+Shortlist a candidate.
+
+Confirm the operation persisted.
+
+Receive a notification.
+
+Mark notification read.
+
+Refresh and confirm read state.
+
+Log out.
+
+Verify protected UI redirects.
+
+Verify protected API rejects the revoked session.
+
+Verify a second user cannot access the first user's private records.
+
+Responsive loop
+
+For each route:
+
+Open at 320, 360, 390, 412, 600, 768, 960, 1024, 1366, and 1920 widths as appropriate.
+
+Inspect portrait and landscape.
+
+Detect document-level horizontal overflow.
+
+Test open menus, filters, dialogs, and forms.
+
+Test long handles, long labels, empty lists, large lists, and errors.
+
+Inspect screenshots where tooling is available.
+
+Fix the root cause, then re-test adjacent breakpoints and shared components.
+
+Record failures honestly.
+
+Example overflow audit:
+
+const result = await page.evaluate(() => ({
+
+  viewportWidth: document.documentElement.clientWidth,
+
+  documentWidth: document.documentElement.scrollWidth,
+
+  overflow:
+
+    document.documentElement.scrollWidth >
+
+    document.documentElement.clientWidth + 1,
+
+}));
+
+Intentional table scrolling must remain inside the table container and must not cause document-level overflow.
+
+Security checklist
+
+No plaintext passwords.
+
+No secrets committed.
+
+No session tokens in localStorage for the preferred cookie-session architecture.
+
+CSRF protection for cookie-authenticated mutations.
+
+Explicit CORS origins.
+
+Rate limiting on login and reset requests.
+
+Server-side permission checks.
+
+Resource ownership checks.
+
+Safe error responses.
+
+No sensitive values in logs.
+
+Safe reset-token handling.
+
+Session revocation on logout.
+
+Exit criteria
+
+Tests run and results are recorded. No critical auth/ownership failures remain. Production build passes. Responsive limitations are documented rather than falsely marked complete.
+
+Phase 11 — Deployment and Final Handover
+
+Goal
+
+Make the product deployable and operable, while documenting external configuration honestly.
+
+Deployment preparation
+
+Configure production frontend API URL.
+
+Configure backend environment variables.
+
+Restrict CORS to production origins.
+
+Require HTTPS for secure cookies.
+
+Configure database persistence and backups.
+
+Run migrations as a controlled deployment step.
+
+Configure logging and health checks.
+
+Configure rate limits.
+
+Pin dependencies and preserve lock files.
+
+Configure email delivery for password resets if enabled.
+
+Configure the initial administrator safely.
+
+Verify static frontend assets and backend routes.
+
+Confirm secrets are supplied by the deployment environment.
+
+Health and observability
+
+Provide a health endpoint such as `GET /api/v1/health` that confirms application availability without disclosing secrets or sensitive infrastructure information. If database readiness is reported, avoid exposing connection strings or database details.
+
+Log useful errors with request IDs where practical. Never log passwords, session cookies, reset tokens, or authorization headers.
+
+Backup and recovery
+
+Document:
+
+Database backup procedure.
+
+Restore procedure.
+
+Migration procedure.
+
+Data retention assumptions.
+
+Recovery limitations.
+
+Who can access production data.
+
+Handover documentation
+
+Deliver:
+
+`README.md` with setup and startup instructions.
+
+`.env.example` files.
+
+API documentation.
+
+Architecture decisions.
+
+Database migration instructions.
+
+Test commands and results.
+
+Known limitations.
+
+Deployment instructions.
+
+Feature status matrix separating implemented, simulated, and externally configured capabilities.
+
+Final release gate
+
+The release is not complete until:
+
+Frontend production build passes.
+
+Backend tests pass or known failures are recorded.
+
+Critical E2E flow passes.
+
+Auth and ownership tests pass.
+
+Notification persistence passes.
+
+Database migrations have been tested safely.
+
+Responsive QA has been performed.
+
+No known critical security issue is left unaddressed.
+
+Deployment-specific requirements are documented.
+
+Golden Snitch Final Product Phase Documents
+
+This pack contains a master roadmap and one detailed document per implementation phase.
+
+Recommended usage:
+
+Start with `00_MASTER_ROADMAP.md`.
+
+Execute Phase 0 and record the actual repository baseline.
+
+Work in order, requiring each phase's exit criteria before moving forward.
+
+Use the combined `Golden Snitch_Final_Product_Build_Plan.docx` for a single-document overview.
+
+Do not claim tests or production integrations succeeded until they have actually been run.
+
+The architecture is a target to verify against the existing repository. Preserve existing data and working code.
