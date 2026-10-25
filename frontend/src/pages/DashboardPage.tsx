@@ -15,11 +15,49 @@ import {
   Sparkles,
   Flame,
   CheckCircle2,
+  BadgeCheck,
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { HeroBanner } from '../components/common/HeroBanner';
+
+// Lightweight inline SVG sparkline matching Image 1
+const MiniSparkline: React.FC<{ data: number[]; color: string; id: string }> = ({ data, color, id }) => {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const width = 64;
+  const height = 24;
+  const points = data
+    .map((d, i) => {
+      const x = (i / (data.length - 1)) * width;
+      const y = height - ((d - min) / range) * (height - 6) - 3;
+      return `${x},${y}`;
+    })
+    .join(' ');
+  const areaPoints = `0,${height} ${points} ${width},${height}`;
+
+  return (
+    <svg width={width} height={height} className="overflow-visible shrink-0 opacity-85 hover:opacity-100 transition-opacity">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.0} />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#${id})`} />
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  );
+};
 import { ActivityHeatmap } from '../components/common/ActivityHeatmap';
 import { CompareProgressCard } from '../components/common/CompareProgressCard';
 import { TalentBadge } from '../components/common/TalentBadge';
@@ -112,103 +150,121 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
         onActionClick={() => navigate('/scouting')}
       />
 
-      {/* 2. Primary KPI Cards Grid (Authoritative Telemetry - Clean Mobile Reflow) */}
+      {/* 2. Primary KPI Cards Grid with Sparklines matching Image 1 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5 lg:gap-3.5">
         {/* Matches Analyzed */}
-        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
-          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+        <div className="p-3 sm:p-3.5 lg:p-4 bg-[#141414] border border-[#242424] rounded-2xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#8E8E8E] gap-1">
             <span className="text-[11px] sm:text-xs font-medium truncate">Matches analyzed</span>
             <Activity size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
-            {realStats.totalMatchesAnalyzed.toLocaleString()}
+          <div className="my-1 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-black font-heading text-[#FFFFFF] tracking-tight truncate">
+              {realStats.totalMatchesAnalyzed.toLocaleString()}
+            </span>
+            <MiniSparkline data={[1200, 1310, 1420, 1540, 1610, 1726]} color="#82EAF4" id="spark-matches" />
           </div>
-          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] font-medium mt-0.5 truncate">
+          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] font-medium truncate">
             10 VCT LAN stages
           </div>
-        </Card>
+        </div>
 
         {/* Scouting Pool */}
-        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
-          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+        <div className="p-3 sm:p-3.5 lg:p-4 bg-[#141414] border border-[#242424] rounded-2xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#8E8E8E] gap-1">
             <span className="text-[11px] sm:text-xs font-medium truncate">Scouting pool</span>
             <Users size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
-            {realStats.totalPlayers}
+          <div className="my-1 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-black font-heading text-[#FFFFFF] tracking-tight truncate">
+              {realStats.totalPlayers}
+            </span>
+            <MiniSparkline data={[210, 235, 255, 275, 290, 297]} color="#82EAF4" id="spark-pool" />
           </div>
-          <div className="text-[10px] sm:text-[11px] text-[#B8B8B8] mt-0.5 truncate">
+          <div className="text-[10px] sm:text-[11px] text-[#8E8E8E] font-medium truncate">
             {realStats.lanProsCount} verified pros
           </div>
-        </Card>
+        </div>
 
         {/* Median ACS */}
-        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
-          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+        <div className="p-3 sm:p-3.5 lg:p-4 bg-[#141414] border border-[#242424] rounded-2xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#8E8E8E] gap-1">
             <span className="text-[11px] sm:text-xs font-medium truncate">Median ACS</span>
-            <Target size={14} className="text-[#82EAF4] shrink-0" />
+            <Target size={14} className="text-[#A855F7] shrink-0" />
           </div>
-          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
-            {realStats.medianAcs}
+          <div className="my-1 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-black font-heading text-[#FFFFFF] tracking-tight truncate">
+              {realStats.medianAcs}
+            </span>
+            <MiniSparkline data={[182, 185, 184, 188, 189, 190.6]} color="#A855F7" id="spark-acs" />
           </div>
-          <div className="text-[10px] sm:text-[11px] text-[#788B8D] mt-0.5 font-mono truncate">
+          <div className="text-[10px] sm:text-[11px] text-[#8E8E8E] font-mono truncate">
             p50 benchmark
           </div>
-        </Card>
+        </div>
 
-        {/* Avg K/D Ratio */}
-        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
-          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+        {/* LAN K/D Ratio */}
+        <div className="p-3 sm:p-3.5 lg:p-4 bg-[#141414] border border-[#242424] rounded-2xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#8E8E8E] gap-1">
             <span className="text-[11px] sm:text-xs font-medium truncate">LAN K/D ratio</span>
-            <Swords size={14} className="text-[#82EAF4] shrink-0" />
+            <Swords size={14} className="text-[#10B981] shrink-0" />
           </div>
-          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
-            {realStats.avgKd.toFixed(2)}
+          <div className="my-1 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-black font-heading text-[#FFFFFF] tracking-tight truncate">
+              {realStats.avgKd.toFixed(2)}
+            </span>
+            <MiniSparkline data={[0.94, 0.96, 0.98, 1.00, 0.99, 1.01]} color="#10B981" id="spark-kd" />
           </div>
-          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] mt-0.5 font-medium truncate">
+          <div className="text-[10px] sm:text-[11px] text-[#10B981] font-medium truncate">
             {realStats.winRate}% win rate
           </div>
-        </Card>
+        </div>
 
         {/* Shortlisted Candidates */}
-        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
-          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+        <div className="p-3 sm:p-3.5 lg:p-4 bg-[#141414] border border-[#242424] rounded-2xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#8E8E8E] gap-1">
             <span className="text-[11px] sm:text-xs font-medium truncate">Shortlisted</span>
-            <BookmarkCheck size={14} className="text-[#82EAF4] shrink-0" />
+            <BookmarkCheck size={14} className="text-[#F59E0B] shrink-0" />
           </div>
-          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
-            {watchlist.length}
+          <div className="my-1 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-black font-heading text-[#FFFFFF] tracking-tight truncate">
+              {watchlist.length}
+            </span>
+            <MiniSparkline data={[1, 1, 2, 2, 2, 2]} color="#F59E0B" id="spark-shortlist" />
           </div>
-          <div className="text-[10px] sm:text-[11px] text-[#B8B8B8] mt-0.5 truncate">
+          <div className="text-[10px] sm:text-[11px] text-[#8E8E8E] font-medium truncate">
             Active pipeline
           </div>
-        </Card>
+        </div>
 
         {/* Average Synergy */}
-        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
-          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+        <div className="p-3 sm:p-3.5 lg:p-4 bg-[#141414] border border-[#242424] rounded-2xl min-w-0 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#8E8E8E] gap-1">
             <span className="text-[11px] sm:text-xs font-medium truncate">Avg synergy</span>
-            <Zap size={14} className="text-[#82EAF4] shrink-0" />
+            <Zap size={14} className="text-[#EC4899] shrink-0" />
           </div>
-          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
-            {avgSynergy}%
+          <div className="my-1 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-black font-heading text-[#FFFFFF] tracking-tight truncate">
+              {avgSynergy}%
+            </span>
+            <MiniSparkline data={[81, 83, 84, 85, 86, 87]} color="#EC4899" id="spark-synergy" />
           </div>
-          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] mt-0.5 font-medium truncate">
+          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] font-medium truncate">
             {totalVacancies} open vacancies
           </div>
-        </Card>
+        </div>
       </div>
 
-      {/* 3. Main Analytical Grid: Player Rankings & Shortlist Pipeline (Elevated Above the Fold) */}
+      {/* 3. Main Analytical Grid: Player Rankings & Shortlist Pipeline matching Image 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 min-w-0">
-        {/* Left 2 Cols: Player Rankings, Selected Telemetry, Trajectory Chart & Activity */}
+        {/* Left 2 Cols (~64%): Leading Candidate Recommendations & Telemetry */}
         <div className="lg:col-span-2 space-y-4 sm:space-y-5 min-w-0">
-          {/* Top Recommended Candidates (Player Rankings brought directly to the top) */}
-          <div className="bg-[#151515] border border-[#2B2B2B] rounded-2xl p-3.5 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] min-w-0">
+          {/* Top Recommended Candidates Card */}
+          <div className="bg-[#151515] border border-[#242424] rounded-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-[#F5F5F5] font-heading leading-tight tracking-tight">
-                  Leading candidate recommendations ({selectedGame})
+                  🏆 Leading candidate recommendations ({selectedGame})
                 </h3>
                 <p className="text-xs text-[#8E8E8E] mt-0.5 font-normal">
                   Ranked deterministically by vacancy gap coverage, not surface combat stats
@@ -217,12 +273,80 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
               <button
                 type="button"
                 onClick={() => navigate('/scouting')}
-                className="inline-flex items-center gap-1 text-xs text-[#B8B8B8] hover:text-[#F5F5F5] font-medium transition-colors self-start sm:self-auto shrink-0 group min-h-[36px]"
+                className="inline-flex items-center gap-1 text-xs text-[#82EAF4] hover:text-[#FFFFFF] font-medium transition-colors self-start sm:self-auto shrink-0 group min-h-[36px]"
               >
                 View all ranked <ArrowRight size={13} className="ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
 
+            {/* Featured Hero Candidate Card matching Image 1 (valyn) */}
+            <div 
+              onClick={() => setSelectedCandidateId('VAL-013')}
+              className="mb-3.5 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-[#112427]/80 via-[#131E21]/60 to-[#151515] border border-[#82EAF4]/50 shadow-[0_0_20px_rgba(130,234,244,0.12)] flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:border-[#82EAF4] transition-all"
+            >
+              {/* Left: Avatar with green active beacon + Handle + Role */}
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="relative shrink-0">
+                  <PlayerAvatar
+                    handle="valyn"
+                    role="Controller"
+                    game="VALORANT"
+                    rank={1}
+                    size="lg"
+                  />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#10B981] ring-2 ring-[#0B0B0B]" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base sm:text-lg font-extrabold text-[#FFFFFF] tracking-tight">
+                      valyn
+                    </span>
+                    <BadgeCheck size={17} className="text-[#82EAF4] fill-[#82EAF4]/20 shrink-0" />
+                  </div>
+                  <p className="text-xs text-[#8E8E8E] mt-0.5 font-medium">
+                    Controller (IGL) · 102h LAN
+                  </p>
+                </div>
+              </div>
+
+              {/* 4 Telemetry Metric Columns */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 py-2 px-3 sm:px-4 rounded-xl bg-[#0B0B0B]/60 border border-[#222222]">
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-[#8E8E8E] tracking-wider">ACS</div>
+                  <div className="text-base sm:text-lg font-black font-mono text-[#FFFFFF]">253</div>
+                  <div className="text-[10px] font-semibold text-[#10B981]">+33 vs role</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-[#8E8E8E] tracking-wider">Role Fit</div>
+                  <div className="text-base sm:text-lg font-black font-mono text-[#82EAF4]">220</div>
+                  <div className="text-[10px] font-medium text-[#82EAF4]/80">Tier-1</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-[#8E8E8E] tracking-wider">Exceed Rate</div>
+                  <div className="text-base sm:text-lg font-black font-mono text-[#FFFFFF]">100%</div>
+                  <div className="text-[10px] font-semibold text-[#10B981]">5/5 matches</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-[#8E8E8E] tracking-wider">Peak ACS</div>
+                  <div className="text-base sm:text-lg font-black font-mono text-[#FFFFFF]">260</div>
+                  <div className="text-[10px] font-medium text-[#A855F7]">Tournament</div>
+                </div>
+              </div>
+
+              {/* Action Button: View Profile */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/players/VAL-013');
+                }}
+                className="px-4 py-2 rounded-full border border-[#82EAF4]/50 bg-[#82EAF4]/10 hover:bg-[#82EAF4] hover:text-[#0A0A0A] text-[#82EAF4] font-bold text-xs shadow-[0_0_12px_rgba(130,234,244,0.18)] transition-all shrink-0 self-start md:self-center"
+              >
+                View Profile
+              </button>
+            </div>
+
+            {/* Other Ranked Candidates List */}
             <div className="space-y-2.5">
               {recommendedCandidates.map((cand, idx) => {
                 const isSelected = selectedCandidateId ? selectedCandidateId === cand.id : idx === 1;
@@ -230,10 +354,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                   <div
                     key={cand.id}
                     onClick={() => setSelectedCandidateId(cand.id)}
-                    className={`p-3 sm:p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-150 cursor-pointer min-w-0 ${
+                    className={`p-3 sm:p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-150 cursor-pointer min-w-0 ${
                       isSelected
                         ? 'bg-[#121617]/90 border border-[#82EAF4]/70 shadow-[0_0_18px_rgba(130,234,244,0.12)] ring-1 ring-[#82EAF4]/30'
-                        : 'bg-[#181818] border border-[#2B2B2B] hover:border-[#3A3A3A]'
+                        : 'bg-[#181818] border border-[#242424] hover:border-[#333333]'
                     }`}
                   >
                     <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
@@ -275,7 +399,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#2B2B2B]/60">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#242424]">
                       <div className="flex flex-col items-start sm:items-end justify-center">
                         <TalentBadge score={cand.talentIndex} size="md" />
                         <div className="mt-1">
@@ -290,7 +414,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                             e.stopPropagation();
                             navigate(`/players/${cand.id}`);
                           }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#222222] hover:bg-[#2A2A2A] text-[#F5F5F5] border border-[#383838] hover:border-[#505050] text-xs font-semibold shadow-sm transition-all shrink-0 min-h-[36px]"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#202020] hover:bg-[#282828] text-[#F5F5F5] border border-[#303030] hover:border-[#444444] text-xs font-semibold shadow-sm transition-all shrink-0 min-h-[36px]"
                         >
                           Dossier
                         </button>
