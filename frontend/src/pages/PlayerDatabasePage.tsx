@@ -306,6 +306,11 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
         title={`Players (${filteredPlayers.length})`}
         subtitle="Sorted by role evaluation criteria"
       >
+        {/* Mobile Swipe Notice */}
+        <div className="sm:hidden flex items-center justify-between text-[11px] text-[#82EAF4] bg-[#142326] px-3.5 py-2 -mx-5 mb-3 border-b border-[#2A3F45]">
+          <span>← Swipe table horizontally to inspect stats &amp; shortlist →</span>
+        </div>
+
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="w-full min-w-[700px] text-left border-collapse text-xs">
             <thead>
@@ -552,8 +557,12 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
                 Enter a player handle above to query live esports providers.
               </div>
             ) : (
-              <div className="overflow-x-auto -mx-5 px-5">
-                <table className="w-full min-w-[700px] text-left border-collapse text-xs">
+              <div>
+                <div className="sm:hidden flex items-center justify-between text-[11px] text-[#82EAF4] bg-[#142326] px-3.5 py-2 -mx-5 mb-3 border-b border-[#2A3F45]">
+                  <span>← Swipe table horizontally to inspect telemetry data →</span>
+                </div>
+                <div className="overflow-x-auto -mx-5 px-5">
+                  <table className="w-full min-w-[700px] text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-border text-text-muted uppercase text-[11px] font-semibold tracking-wider">
                       <th className="py-2.5 px-3">Player Handle</th>
@@ -665,7 +674,8 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
                   </tbody>
                 </table>
               </div>
-            )}
+            </div>
+          )}
           </Card>
         </div>
       )}
