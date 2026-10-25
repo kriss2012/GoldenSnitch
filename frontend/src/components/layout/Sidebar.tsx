@@ -66,9 +66,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="h-16 px-4 flex items-center justify-between border-b border-[#262626] shrink-0">
           <div className="flex items-center gap-2.5">
             <img
-              src="/assets/golden-snitch/golden-snitch-emblem.png"
+              src="/assets/golden-snitch/golden-snitch-winged.png"
               alt="Golden Snitch"
-              className="w-7 h-7 object-contain"
+              className="h-6 w-auto object-contain drop-shadow-[0_0_8px_rgba(245,184,61,0.5)]"
             />
             <span className="text-sm font-extrabold italic text-[#F5B83D]">
               GOLDEN SNITCH
