@@ -338,7 +338,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate('/players/VAL-013');
+                  navigate('/app/players/VAL-013');
                 }}
                 className="px-4 py-2 rounded-full border border-[#82EAF4]/50 bg-[#82EAF4]/10 hover:bg-[#82EAF4] hover:text-[#0A0A0A] text-[#82EAF4] font-bold text-xs shadow-[0_0_12px_rgba(130,234,244,0.18)] transition-all shrink-0 self-start md:self-center"
               >
@@ -374,7 +374,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/players/${cand.id}`);
+                              navigate(`/app/players/${cand.id}`);
                             }}
                             className="font-bold text-[#F5F5F5] hover:text-[#82EAF4] transition-colors text-sm sm:text-base leading-tight"
                           >
@@ -412,7 +412,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/players/${cand.id}`);
+                            navigate(`/app/players/${cand.id}`);
                           }}
                           className="px-3.5 py-1.5 rounded-xl bg-[#202020] hover:bg-[#282828] text-[#F5F5F5] border border-[#303030] hover:border-[#444444] text-xs font-semibold shadow-sm transition-all shrink-0 min-h-[36px]"
                         >
@@ -446,7 +446,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => navigate(`/players/${selectedCandidate.id}`)}
+                  onClick={() => navigate(`/app/players/${selectedCandidate.id}`)}
                 >
                   Full Profile Dossier <ArrowRight size={13} className="ml-1" />
                 </Button>
