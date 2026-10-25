@@ -103,7 +103,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
   const avgSynergy = Math.round(rosters.reduce((acc, r) => acc + r.synergyScore, 0) / (rosters.length || 1));
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-4 sm:space-y-5 overflow-x-hidden w-full">
       {/* 1. Spotlight Hero Banner (Golden Snitch Tournament Intelligence) */}
       <HeroBanner
         title="Golden Snitch — Esports Intelligence Hub"
@@ -112,97 +112,99 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
         onActionClick={() => navigate('/scouting')}
       />
 
-      {/* 2. Primary KPI Cards Grid (Authoritative Telemetry) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+      {/* 2. Primary KPI Cards Grid (Authoritative Telemetry - Clean Mobile Reflow) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5 lg:gap-3.5">
         {/* Matches Analyzed */}
-        <Card className="p-3.5 sm:p-4 bg-[#242424] border-[#353535] rounded-2xl">
-          <div className="flex items-center justify-between text-[#B8B8B8]">
-            <span className="text-xs font-medium">Matches analyzed</span>
-            <Activity size={15} className="text-[#82EAF4]" />
+        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
+          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+            <span className="text-[11px] sm:text-xs font-medium truncate">Matches analyzed</span>
+            <Activity size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1.5 text-xl sm:text-2xl font-extrabold font-heading text-[#F5F5F5]">
+          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
             {realStats.totalMatchesAnalyzed.toLocaleString()}
           </div>
-          <div className="text-[11px] text-[#82EAF4] font-medium mt-0.5">
+          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] font-medium mt-0.5 truncate">
             10 VCT LAN stages
           </div>
         </Card>
 
         {/* Scouting Pool */}
-        <Card className="p-3.5 sm:p-4 bg-[#242424] border-[#353535] rounded-2xl">
-          <div className="flex items-center justify-between text-[#B8B8B8]">
-            <span className="text-xs font-medium">Scouting pool</span>
-            <Users size={15} className="text-[#82EAF4]" />
+        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
+          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+            <span className="text-[11px] sm:text-xs font-medium truncate">Scouting pool</span>
+            <Users size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1.5 text-xl sm:text-2xl font-extrabold font-heading text-[#F5F5F5]">
+          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
             {realStats.totalPlayers}
           </div>
-          <div className="text-[11px] text-[#B8B8B8] mt-0.5">
+          <div className="text-[10px] sm:text-[11px] text-[#B8B8B8] mt-0.5 truncate">
             {realStats.lanProsCount} verified pros
           </div>
         </Card>
 
         {/* Median ACS */}
-        <Card className="p-3.5 sm:p-4 bg-[#242424] border-[#353535] rounded-2xl">
-          <div className="flex items-center justify-between text-[#B8B8B8]">
-            <span className="text-xs font-medium">Median ACS</span>
-            <Target size={15} className="text-[#82EAF4]" />
+        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
+          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+            <span className="text-[11px] sm:text-xs font-medium truncate">Median ACS</span>
+            <Target size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1.5 text-xl sm:text-2xl font-extrabold font-heading text-[#F5F5F5]">
+          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
             {realStats.medianAcs}
           </div>
-          <div className="text-[11px] text-[#788B8D] mt-0.5 font-mono">
+          <div className="text-[10px] sm:text-[11px] text-[#788B8D] mt-0.5 font-mono truncate">
             p50 benchmark
           </div>
         </Card>
 
         {/* Avg K/D Ratio */}
-        <Card className="p-3.5 sm:p-4 bg-[#242424] border-[#353535] rounded-2xl">
-          <div className="flex items-center justify-between text-[#B8B8B8]">
-            <span className="text-xs font-medium">LAN K/D ratio</span>
-            <Swords size={15} className="text-[#82EAF4]" />
+        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
+          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+            <span className="text-[11px] sm:text-xs font-medium truncate">LAN K/D ratio</span>
+            <Swords size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1.5 text-xl sm:text-2xl font-extrabold font-heading text-[#F5F5F5]">
+          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
             {realStats.avgKd.toFixed(2)}
           </div>
-          <div className="text-[11px] text-[#82EAF4] mt-0.5 font-medium">
+          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] mt-0.5 font-medium truncate">
             {realStats.winRate}% win rate
           </div>
         </Card>
 
         {/* Shortlisted Candidates */}
-        <Card className="p-3.5 sm:p-4 bg-[#242424] border-[#353535] rounded-2xl">
-          <div className="flex items-center justify-between text-[#B8B8B8]">
-            <span className="text-xs font-medium">Shortlisted</span>
-            <BookmarkCheck size={15} className="text-[#82EAF4]" />
+        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
+          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+            <span className="text-[11px] sm:text-xs font-medium truncate">Shortlisted</span>
+            <BookmarkCheck size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1.5 text-xl sm:text-2xl font-extrabold font-heading text-[#F5F5F5]">
+          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
             {watchlist.length}
           </div>
-          <div className="text-[11px] text-[#B8B8B8] mt-0.5">Active pipeline</div>
+          <div className="text-[10px] sm:text-[11px] text-[#B8B8B8] mt-0.5 truncate">
+            Active pipeline
+          </div>
         </Card>
 
         {/* Average Synergy */}
-        <Card className="p-3.5 sm:p-4 bg-[#242424] border-[#353535] rounded-2xl">
-          <div className="flex items-center justify-between text-[#B8B8B8]">
-            <span className="text-xs font-medium">Average synergy</span>
-            <Zap size={15} className="text-[#82EAF4]" />
+        <Card className="p-3 sm:p-3.5 lg:p-4 bg-[#242424] border-[#353535] rounded-xl sm:rounded-2xl min-w-0">
+          <div className="flex items-center justify-between text-[#B8B8B8] gap-1">
+            <span className="text-[11px] sm:text-xs font-medium truncate">Avg synergy</span>
+            <Zap size={14} className="text-[#82EAF4] shrink-0" />
           </div>
-          <div className="mt-1.5 text-xl sm:text-2xl font-extrabold font-heading text-[#F5F5F5]">
+          <div className="mt-1 sm:mt-1.5 text-lg sm:text-xl lg:text-2xl font-extrabold font-heading text-[#F5F5F5] tracking-tight truncate">
             {avgSynergy}%
           </div>
-          <div className="text-[11px] text-[#82EAF4] mt-0.5 font-medium">
+          <div className="text-[10px] sm:text-[11px] text-[#82EAF4] mt-0.5 font-medium truncate">
             {totalVacancies} open vacancies
           </div>
         </Card>
       </div>
 
       {/* 3. Main Analytical Grid: Player Rankings & Shortlist Pipeline (Elevated Above the Fold) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 min-w-0">
         {/* Left 2 Cols: Player Rankings, Selected Telemetry, Trajectory Chart & Activity */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-5">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-5 min-w-0">
           {/* Top Recommended Candidates (Player Rankings brought directly to the top) */}
-          <div className="bg-[#151515] border border-[#2B2B2B] rounded-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+          <div className="bg-[#151515] border border-[#2B2B2B] rounded-2xl p-3.5 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-[#F5F5F5] font-heading leading-tight tracking-tight">
@@ -215,7 +217,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
               <button
                 type="button"
                 onClick={() => navigate('/scouting')}
-                className="inline-flex items-center gap-1 text-xs text-[#B8B8B8] hover:text-[#F5F5F5] font-medium transition-colors self-start sm:self-auto shrink-0 group"
+                className="inline-flex items-center gap-1 text-xs text-[#B8B8B8] hover:text-[#F5F5F5] font-medium transition-colors self-start sm:self-auto shrink-0 group min-h-[36px]"
               >
                 View all ranked <ArrowRight size={13} className="ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </button>
@@ -228,13 +230,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                   <div
                     key={cand.id}
                     onClick={() => setSelectedCandidateId(cand.id)}
-                    className={`p-3.5 sm:p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 transition-all duration-150 cursor-pointer ${
+                    className={`p-3 sm:p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-150 cursor-pointer min-w-0 ${
                       isSelected
                         ? 'bg-[#121617]/90 border border-[#82EAF4]/70 shadow-[0_0_18px_rgba(130,234,244,0.12)] ring-1 ring-[#82EAF4]/30'
                         : 'bg-[#181818] border border-[#2B2B2B] hover:border-[#3A3A3A]'
                     }`}
                   >
-                    <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                    <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                       <PlayerAvatar
                         handle={cand.handle}
                         role={cand.role}
@@ -242,8 +244,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                         rank={idx + 1}
                         size="md"
                       />
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -273,8 +275,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-3.5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#2B2B2B]/60">
-                      <div className="flex flex-col items-end justify-center">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#2B2B2B]/60">
+                      <div className="flex flex-col items-start sm:items-end justify-center">
                         <TalentBadge score={cand.talentIndex} size="md" />
                         <div className="mt-1">
                           <ConfidenceBadge level={cand.confidence} />
@@ -288,7 +290,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                             e.stopPropagation();
                             navigate(`/players/${cand.id}`);
                           }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#222222] hover:bg-[#2A2A2A] text-[#F5F5F5] border border-[#383838] hover:border-[#505050] text-xs font-semibold shadow-sm transition-all shrink-0"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#222222] hover:bg-[#2A2A2A] text-[#F5F5F5] border border-[#383838] hover:border-[#505050] text-xs font-semibold shadow-sm transition-all shrink-0 min-h-[36px]"
                         >
                           Dossier
                         </button>
