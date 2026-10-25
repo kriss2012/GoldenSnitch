@@ -297,6 +297,11 @@ export const ComparePage: React.FC = () => {
         title="Full metric comparison table"
         subtitle="Leading benchmark values highlighted in electric cyan for rapid scanning"
       >
+        {/* Mobile Swipe Notice */}
+        <div className="sm:hidden flex items-center justify-between text-[11px] text-[#82EAF4] bg-[#142326] px-3.5 py-2 -mx-5 mb-3 border-b border-[#2A3F45]">
+          <span>← Swipe horizontally to compare all candidate metrics →</span>
+        </div>
+
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="w-full min-w-[650px] text-left border-collapse text-xs">
             <thead>
