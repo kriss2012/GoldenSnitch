@@ -1925,6 +1925,12 @@ app.include_router(recommendations_router)
 app.include_router(features_1_to_7_router)
 app.include_router(features_8_to_14_router)
 
+try:
+    from .cognitive import cognitive_router
+    app.include_router(cognitive_router)
+except ImportError:
+    pass
+
 @app.get("/")
 @app.get("/{full_path:path}")
 def serve_spa(full_path: str = ""):
