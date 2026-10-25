@@ -129,7 +129,7 @@ export const MapPerformanceAnalytics: React.FC<MapPerformanceAnalyticsProps> = (
       </div>
 
       {/* Bar Chart comparing ACS across all maps */}
-      <div className="p-4 bg-[#141414] border border-[#242424] rounded-2xl relative">
+      <div className="p-4 bg-[#141414] border border-[#242424] rounded-2xl relative min-w-0 overflow-hidden">
         <div className="flex items-center justify-between mb-2 text-xs">
           <span className="font-semibold text-[#D4D4D4] flex items-center gap-1.5">
             <Flame size={14} className="text-[#9B51E0]" />
@@ -138,7 +138,7 @@ export const MapPerformanceAnalytics: React.FC<MapPerformanceAnalyticsProps> = (
           <span className="text-[11px] text-[#8E8E8E]">Higher is better</span>
         </div>
 
-        <div style={{ width: '100%', height }} className="pt-2">
+        <div style={{ width: '100%', height }} className="pt-2 min-w-0 overflow-hidden">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={mapStats} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
