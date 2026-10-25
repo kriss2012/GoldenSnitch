@@ -6,8 +6,6 @@
 - Immutable recommendation snapshot & audit recomputation (F8)
 - Multi-candidate side-by-side comparison (F10)
 """
-import pytest
-from app.auth import authenticate_user, create_access_token, decode_access_token
 
 def test_auth_login_and_roles(client):
     """Test F14: JWT Authentication and Role-Based Access Control."""

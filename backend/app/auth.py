@@ -156,7 +156,6 @@ def authenticate_user(username: str, password: str, conn=None) -> Optional[User]
     
     # 1. Check database users table
     if conn:
-        from . import db
         user_row = conn.execute(
             "SELECT * FROM users WHERE LOWER(username)=? OR LOWER(email)=?",
             (clean_uname, clean_uname)

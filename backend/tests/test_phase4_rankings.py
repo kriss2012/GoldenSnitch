@@ -8,7 +8,6 @@ Verifies:
 5. IGL timeline of decisions with win-probability added (WPA) on GET /api/igl/{player_id}/decisions.
 """
 
-import pytest
 from starlette.testclient import TestClient
 try:
     from backend.app.main import app

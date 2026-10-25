@@ -346,6 +346,19 @@ export const ComparePage: React.FC = () => {
                 ))}
               </tr>
               <tr>
+                <td className="py-3 px-3 font-medium text-[#B8B8B8]">Cognitive Reflex & Aim</td>
+                {comparedPlayers.map(p => (
+                  <td key={p.id} className="py-3 px-3">
+                    <button
+                      onClick={() => navigate('/app/cognitive-lab')}
+                      className="inline-flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded-md bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/30 font-semibold transition-colors cursor-pointer"
+                    >
+                      <span>⚡ 188ms · 96% Aim</span>
+                    </button>
+                  </td>
+                ))}
+              </tr>
+              <tr>
                 <td className="py-3 px-3 font-medium text-[#B8B8B8]">LAN Match Sample</td>
                 {comparedPlayers.map(p => {
                   const isLeader = p.matchesPlayed === Math.max(...comparedPlayers.map(x => x.matchesPlayed));

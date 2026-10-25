@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 import numpy as np
 from scipy.optimize import minimize
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, Optional
 
 
 def _sigmoid(z: np.ndarray) -> np.ndarray:

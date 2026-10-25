@@ -14,13 +14,11 @@ from __future__ import annotations
 import math
 import sqlite3
 import numpy as np
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Any, Optional
 
-from ..core.config_loader import get_game_config
 from ..metrics.role_engine import UniversalRoleEngine
 from ..metrics.trajectory import TrajectoryEngine
 from ..synergy.engine import SynergyEngine
-from ..ml.win_probability import get_win_prob_model
 
 
 class CoreDifferentiatorsEngine:
@@ -285,7 +283,7 @@ class CoreDifferentiatorsEngine:
         if not p_row:
             raise ValueError(f"Player '{player_id}' not found")
 
-        name, role, maps_cnt = p_row[1], p_row[2], p_row[3]
+        name, role, _maps_cnt = p_row[1], p_row[2], p_row[3]
         score_res = self.role_engine.score_player(conn, player_id, role_id=role)
         src_score = score_res["final_score"]
 

@@ -3,10 +3,9 @@ ScoutIQ — Core Differentiators API (Features 1–7, Section 8 & 14, Phase 7)
 """
 
 from __future__ import annotations
-import sqlite3
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Query, Body
-from pydantic import BaseModel, Field
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from ..db import connect
 from ..features.core_differentiators import CoreDifferentiatorsEngine

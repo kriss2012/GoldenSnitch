@@ -12,9 +12,9 @@ Provides:
 
 from __future__ import annotations
 import sqlite3
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Body, Query
-from pydantic import BaseModel, Field
+from typing import Dict, Any, Optional
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from ..db import connect
 from ..synergy.engine import SynergyEngine

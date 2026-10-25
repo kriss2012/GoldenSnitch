@@ -10,7 +10,6 @@ Verifies:
 7. Feature 14: Academy-to-Main Pipeline Readiness Score.
 """
 
-import pytest
 from starlette.testclient import TestClient
 try:
     from backend.app.main import app

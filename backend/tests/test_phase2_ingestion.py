@@ -9,7 +9,6 @@ Verifies:
 6. GET /api/ingest/status data quality reporting.
 """
 
-import pytest
 from app.db import connect
 from adapters.api_adapters import PandaScoreAdapter, RiotGamesAdapter, OpenDotaAdapter
 from adapters.csv_adapter import CSVDatasetAdapter

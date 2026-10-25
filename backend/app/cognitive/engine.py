@@ -1,9 +1,8 @@
 """Assessment Engine & Scoring Core for Esports Cognitive Performance Suite.
 Calculates rigorous, tamper-resistant metrics from raw trial telemetry.
 """
-import math
 import statistics
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 from .models import (
     AimTrainerMetrics,
     AssessmentType,

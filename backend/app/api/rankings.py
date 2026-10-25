@@ -9,10 +9,9 @@ Provides:
 from __future__ import annotations
 import math
 import sqlite3
-import numpy as np
 from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, Query, Body, HTTPException, Depends
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Query, Body, HTTPException
+from pydantic import BaseModel
 
 from ..db import connect
 from ..core.config_loader import get_game_config
@@ -343,7 +342,7 @@ def get_igl_decisions(player_id: str, limit: int = 30):
     """
     conn = connect()
     cursor = conn.cursor()
-    wp_model = get_win_prob_model(conn)
+    _ = get_win_prob_model(conn)
 
     # Query latest rounds called by this IGL
     rounds = cursor.execute("""
@@ -370,9 +369,9 @@ def get_igl_decisions(player_id: str, limit: int = 30):
 
         # Mid-round adjustment
         if switched:
-            p_mid = p_before + (0.12 if won else -0.10)
+            _p_mid = p_before + (0.12 if won else -0.10)
         else:
-            p_mid = p_before
+            _p_mid = p_before
 
         p_after = 1.0 if won else 0.0
         wpa = round(p_after - p_before, 3)

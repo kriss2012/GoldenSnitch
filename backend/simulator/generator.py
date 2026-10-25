@@ -10,9 +10,8 @@ from __future__ import annotations
 import json
 import math
 import random
-import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Any
 
 # Archetypes for trap testing (Section 4.3 & Section 12.2)
 ARCHETYPES = [
@@ -234,8 +233,8 @@ class Simulator:
                 player_lookup[game_id].append(lp)
 
                 handle = f"{self.rng.choice(handles_pool)}_{idx+1}"
-                real_name = f"Player {idx+1} ({game_id})"
-                nationality = self.rng.choice(["US", "KR", "SE", "DK", "BR", "FR", "IN", "CA", "PL", "TR"])
+                _real_name = f"Player {idx+1} ({game_id})"
+                _nationality = self.rng.choice(["US", "KR", "SE", "DK", "BR", "FR", "IN", "CA", "PL", "TR"])
                 languages = [self.rng.choice(LANGUAGES)]
                 if "en" not in languages and self.rng.random() < 0.7:
                     languages.append("en")
@@ -334,7 +333,7 @@ class Simulator:
                 match_id = f"mat_{game_id}_{m_idx//3+1:05d}"
                 map_name = self.rng.choice(map_pool)
                 days_offset = (m_idx * 720) // maps_per_game
-                match_time = base_date + timedelta(days=days_offset, hours=self.rng.randint(12, 22))
+                _match_time = base_date + timedelta(days=days_offset, hours=self.rng.randint(12, 22))
 
                 # Select two teams of similar or cross tier
                 t_a = self.rng.choice(teams_in_game)
@@ -525,7 +524,7 @@ class Simulator:
         )
         conn.commit()
 
-        print(f"    [+] Successfully generated and committed:")
+        print("    [+] Successfully generated and committed:")
         print(f"        - {len(maps_batch)} maps/games across 4 titles")
         print(f"        - {len(rounds_batch)} round logs with plan switches and timestamps")
         print(f"        - {len(pms_batch)} player map performance records")

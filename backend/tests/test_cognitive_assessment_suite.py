@@ -1,5 +1,4 @@
 """Unit & Integration tests for the Esports Cognitive & Performance Assessment Suite."""
-import pytest
 from starlette.testclient import TestClient
 from backend.app.main import app
 

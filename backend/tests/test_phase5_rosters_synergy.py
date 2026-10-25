@@ -8,7 +8,6 @@ Verifies:
 5. Automatic Gap Diagnosis: weakest slot, missing tactical attributes, and suggested solutions.
 """
 
-import pytest
 from starlette.testclient import TestClient
 try:
     from backend.app.main import app

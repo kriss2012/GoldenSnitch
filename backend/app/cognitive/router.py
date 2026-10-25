@@ -1,8 +1,8 @@
 """FastAPI router for the Esports Cognitive & Performance Assessment Suite.
 Endpoints for session orchestration, telemetry recording, and reporting.
 """
-from typing import Any, Dict, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Query
 from ..db import connect
 from .engine import CognitiveScoringEngine
 from .models import (

@@ -31,6 +31,7 @@ import { PlayerPerformanceTrendChart } from '../components/common/charts/PlayerP
 import { AcsComparisonChart } from '../components/common/charts/AcsComparisonChart';
 import { KdDistributionChart } from '../components/common/charts/KdDistributionChart';
 import { MapPerformanceAnalytics } from '../components/common/charts/MapPerformanceAnalytics';
+import { CognitiveReportView, cognitiveService, CognitiveProfileReport } from '../features/cognitive';
 
 
 export const PlayerProfilePage: React.FC = () => {
@@ -41,9 +42,16 @@ export const PlayerProfilePage: React.FC = () => {
     return playerId ? scoutService.getPlayerById(playerId) : undefined;
   }, [playerId]);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'matches' | 'situational' | 'role' | 'trajectory' | 'quality'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'cognitive' | 'matches' | 'situational' | 'role' | 'trajectory' | 'quality'>('overview');
   const [analyticsView, setAnalyticsView] = useState<'all' | 'trend' | 'acs' | 'kd' | 'map'>('all');
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [cognitiveReport, setCognitiveReport] = useState<CognitiveProfileReport | null>(null);
+
+  useEffect(() => {
+    if (player?.id) {
+      cognitiveService.getPlayerReport(player.id).then(setCognitiveReport).catch(() => {});
+    }
+  }, [player?.id]);
 
   // Animated 48px Talent Index Counter (respects reduced motion)
   const [animatedIndex, setAnimatedIndex] = useState(0);
@@ -204,6 +212,7 @@ export const PlayerProfilePage: React.FC = () => {
       <div className="border-b border-border flex items-center gap-2 overflow-x-auto select-none">
         {[
           { id: 'overview', label: 'Overview' },
+          { id: 'cognitive', label: 'Cognitive Biometrics' },
           { id: 'matches', label: `Match history (${player.matchHistory?.length || 0})` },
           { id: 'situational', label: 'Situational analysis' },
           { id: 'role', label: 'Role evaluation' },
@@ -307,6 +316,24 @@ export const PlayerProfilePage: React.FC = () => {
               </div>
             </Card>
           </div>
+        </div>
+      )}
+
+      {/* TAB: COGNITIVE BIOMETRICS */}
+      {activeTab === 'cognitive' && (
+        <div className="space-y-6">
+          {cognitiveReport ? (
+            <CognitiveReportView report={cognitiveReport} />
+          ) : (
+            <Card title="Cognitive Performance Lab">
+              <div className="py-12 text-center space-y-4">
+                <p className="text-sm text-text-muted">No verified cognitive calibration recorded for this candidate.</p>
+                <Button variant="secondary" onClick={() => navigate('/app/cognitive-lab')}>
+                  Launch Cognitive Calibration
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       )}
 

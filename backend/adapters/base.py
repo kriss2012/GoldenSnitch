@@ -4,7 +4,7 @@ Defines standard contracts for external APIs, CSV datasets, and synthetic simula
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from pydantic import BaseModel
 
 

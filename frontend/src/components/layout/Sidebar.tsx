@@ -15,7 +15,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Gamepad2
+  Gamepad2,
+  Activity
 } from 'lucide-react';
 
 import { GameTitle } from '../../types';
@@ -37,6 +38,7 @@ const NAV_ITEMS = [
   { path: '/app/compare', label: 'Comparison', icon: Scale },
   { path: '/app/rosters', label: 'Rosters & Vacancies', icon: Shield },
   { path: '/app/synergy', label: 'Roster Synergy', icon: Zap },
+  { path: '/app/cognitive-lab', label: 'Cognitive Lab', icon: Activity },
   { path: '/app/watchlist', label: 'Watchlist', icon: BookmarkCheck },
   { path: '/app/reports', label: 'Scouting Reports', icon: FileText },
   { path: '/app/organization', label: 'Organization', icon: Building2 },

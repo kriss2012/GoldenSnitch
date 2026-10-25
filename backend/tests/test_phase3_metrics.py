@@ -9,12 +9,10 @@ Verifies:
 5. IGL weights presets and custom weights validation.
 """
 
-import math
-import pytest
 from scipy.stats import spearmanr
 from app.db import connect
-from app.ml.win_probability import RoundStateWinProbabilityModel, get_win_prob_model
-from app.metrics.normalization import bayesian_shrinkage, compute_match_weight
+from app.ml.win_probability import RoundStateWinProbabilityModel
+from app.metrics.normalization import bayesian_shrinkage
 from app.metrics.igl_model import IGLScoringEngine
 from app.metrics.role_engine import UniversalRoleEngine
 

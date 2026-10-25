@@ -4,8 +4,7 @@ Every YAML role config weights must sum to 1.0 +- 1e-9.
 Every role must define >= 6 metrics.
 """
 
-import pytest
-from app.core.config_loader import list_game_configs, get_game_config
+from app.core.config_loader import list_game_configs
 
 
 def test_yaml_configs_loaded():

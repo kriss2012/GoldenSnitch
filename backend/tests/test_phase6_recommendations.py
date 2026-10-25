@@ -10,7 +10,6 @@ Verifies:
 5. Dynamic data-driven bullet points derived directly from top component differences.
 """
 
-import pytest
 from starlette.testclient import TestClient
 try:
     from backend.app.main import app

@@ -6,7 +6,7 @@ If API keys are missing, reports 'not configured' and falls back to simulated da
 """
 
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from .base import DataSourceAdapter, IngestionResult
 
 

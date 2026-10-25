@@ -41,7 +41,7 @@ from .core.config_loader import list_game_configs, get_game_config
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from .auth_routes import router as auth_router, limiter as auth_limiter
+from .auth_routes import limiter as auth_limiter
 
 app = FastAPI(title="Golden Snitch API", version="2.0.0")
 app.state.limiter = auth_limiter

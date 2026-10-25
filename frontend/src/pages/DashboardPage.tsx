@@ -585,6 +585,56 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
           {/* Candidate Benchmarking / Compare Progress */}
           <CompareProgressCard />
 
+          {/* Cognitive Performance Lab Card */}
+          <div className="p-4 sm:p-5 bg-gradient-to-br from-[#121620] via-[#10141D] to-[#14121A] border border-[#F59E0B]/30 hover:border-[#F59E0B]/60 rounded-2xl shadow-xl transition-all group">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 group-hover:scale-105 transition-transform">
+                  <Activity size={18} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+                    Cognitive Performance Lab
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/30">NEW</span>
+                  </h4>
+                  <span className="text-[11px] text-gray-400">Reflex, sequence & aim calibration</span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/app/cognitive-lab')}
+                className="text-[#F59E0B] hover:text-white p-1"
+              >
+                <ArrowRight size={15} />
+              </Button>
+            </div>
+
+            <p className="text-xs text-gray-400 leading-relaxed mb-4">
+              Calibrate your visual reaction time, sequence memory, aim acquisition speed, and spatial recall with standardized esports biometrics.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 p-2.5 bg-black/40 rounded-xl border border-white/5 mb-4">
+              <div className="text-left">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider block">Standardized Tests</span>
+                <span className="text-sm font-bold text-white">4 Modules</span>
+              </div>
+              <div className="text-left">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider block">Timing Precision</span>
+                <span className="text-sm font-bold text-cyan-400 font-mono">0.1 ms Clock</span>
+              </div>
+            </div>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/app/cognitive-lab')}
+              className="w-full bg-[#F59E0B] hover:bg-[#D97706] text-black font-bold text-xs uppercase tracking-wider shadow-md"
+            >
+              Launch Assessment Lab <ArrowRight size={13} className="ml-1.5" />
+            </Button>
+          </div>
+
           {/* Roster Overview Cards */}
           <Card
             title="Roster health"

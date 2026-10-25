@@ -3,8 +3,6 @@ Verifies model metadata, empirical distribution parameters, player profiles, and
 """
 import json
 from pathlib import Path
-import pytest
-from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 MODEL_PATH = ROOT / "backend" / "app" / "models" / "valorant_lan_trained_model.json"

@@ -17,9 +17,8 @@ custom weights validated to 1.0, Bayesian shrinkage (k=12), and risk flag surfac
 from __future__ import annotations
 import math
 import numpy as np
-from typing import Dict, List, Tuple, Any, Optional
-from .normalization import bayesian_shrinkage, compute_peer_percentiles
-from ..core.config_loader import get_game_config
+from typing import Dict, Any, Optional
+from .normalization import bayesian_shrinkage
 
 DEFAULT_IGL_WEIGHTS = {
     "cwd": 0.22,

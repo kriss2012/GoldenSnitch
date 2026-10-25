@@ -6,12 +6,11 @@ Provides:
 """
 
 from __future__ import annotations
-import sqlite3
 import json
 import uuid
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Query, Body
-from pydantic import BaseModel, Field
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from ..db import connect
 from ..recommend.engine import RecommendationEngine

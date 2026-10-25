@@ -3,9 +3,8 @@ ScoutIQ — Operational Intelligence API (Features 8–14, Section 9 & 14, Phase
 """
 
 from __future__ import annotations
-import sqlite3
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Query, Body
+from typing import Dict, List, Optional
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from ..db import connect
