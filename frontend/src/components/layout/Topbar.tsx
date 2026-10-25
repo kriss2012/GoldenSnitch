@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, User, LogOut, ChevronDown, Gamepad2 } from 'lucide-react';
+import { Menu, Search, User, LogOut, ChevronDown, Gamepad2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { GameTitle } from '../../types';
 import { NotificationDropdown } from './NotificationDropdown';
 import { useAuth } from '../../context/AuthContext';
@@ -9,6 +9,8 @@ interface TopbarProps {
   onOpenMobileNav: () => void;
   selectedGame: GameTitle;
   onSelectGame: (g: GameTitle) => void;
+  isDesktopCollapsed?: boolean;
+  onToggleDesktopCollapse?: () => void;
 }
 
 const SUPPORTED_GAMES: GameTitle[] = ['VALORANT', 'Counter-Strike 2', 'League of Legends', 'Dota 2'];
@@ -17,6 +19,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   onOpenMobileNav,
   selectedGame,
   onSelectGame,
+  isDesktopCollapsed = false,
+  onToggleDesktopCollapse,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,26 +36,52 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="h-16 px-4 md:px-6 bg-[#101010] border-b border-[#353535] flex items-center justify-between gap-4 sticky top-0 z-30 shrink-0 select-none">
-      {/* Left: Mobile Menu Toggle + User Greeting */}
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="h-16 px-3.5 sm:px-4 md:px-6 bg-[#101010] border-b border-[#353535] flex items-center justify-between gap-3 sm:gap-4 sticky top-0 z-30 shrink-0 select-none">
+      {/* Left: Mobile Menu Toggle + Desktop Collapse Toggle + User Greeting */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           onClick={onOpenMobileNav}
-          className="lg:hidden w-10 h-10 flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-xl border border-[#353535] bg-[#242424] shrink-0"
+          className="lg:hidden w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-xl border border-[#353535] bg-[#242424] shrink-0"
           aria-label="Open navigation menu"
         >
           <Menu size={20} />
         </button>
 
+        {onToggleDesktopCollapse && (
+          <button
+            onClick={onToggleDesktopCollapse}
+            className="hidden lg:flex w-9 h-9 items-center justify-center text-[#8E8E8E] hover:text-[#82EAF4] hover:bg-[#242424] rounded-xl border border-[#353535] transition-colors shrink-0"
+            title={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={isDesktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isDesktopCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        )}
+
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-semibold text-[#F5F5F5]">
+            <span className="text-xs sm:text-sm font-semibold text-[#F5F5F5] truncate">
               Hi, {user?.name || 'Analyst'}!
             </span>
-            <span className="hidden sm:inline-block text-xs text-[#B8B8B8]">
+            <span className="hidden xl:inline-block text-xs text-[#8E8E8E]">
               Golden Snitch live esports intelligence
             </span>
           </div>
+        </div>
+
+        {/* Mobile Title Selector */}
+        <div className="md:hidden relative shrink-0">
+          <select
+            value={selectedGame}
+            onChange={(e) => onSelectGame(e.target.value as GameTitle)}
+            className="h-8 pl-2 pr-6 rounded-lg bg-[#202020] border border-[#353535] text-[11px] font-bold text-[#82EAF4] focus:outline-none focus:border-[#82EAF4] appearance-none cursor-pointer"
+            aria-label="Select game title"
+          >
+            {SUPPORTED_GAMES.map((g) => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
+          <ChevronDown size={11} className="absolute right-1.5 top-2.5 text-[#888888] pointer-events-none" />
         </div>
       </div>
 
