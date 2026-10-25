@@ -101,7 +101,7 @@ def dimension_scores(player, index, game):
 def evidence(dims, weights, matches):
     cov = sum(w * dims[d]["coverage"] for d, w in weights.items() if d in dims)
     sample = min(1.0, matches / SAMPLE_FULL)
-    provs = [PROVENANCE_RELIABILITY[x["provenance"]] for d in weights if d in dims for x in dims[d]["metrics"] if x.get("provenance")]
+    provs = [PROVENANCE_RELIABILITY.get(x["provenance"], 0.9) for d in weights if d in dims for x in dims[d]["metrics"] if x.get("provenance")]
     prov = mean(provs) if provs else 0.0
     idx = round(0.5 * cov + 0.3 * sample + 0.2 * prov, 4)
     tier = "high" if (idx >= 0.8 and cov >= 0.9) else "medium" if idx >= 0.6 else "low"
