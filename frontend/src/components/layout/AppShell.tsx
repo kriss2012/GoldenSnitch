@@ -11,12 +11,35 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ selectedGame, onSelectGame }) => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('scoutgrid_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleDesktopCollapse = () => {
+    setIsDesktopCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('scoutgrid_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-void text-text font-sans">
       {/* Desktop Sidebar (hidden on screens < 1024px) */}
       <div className="hidden lg:flex shrink-0 h-full">
-        <Sidebar isOpen={true} />
+        <Sidebar
+          isOpen={true}
+          isCollapsed={isDesktopCollapsed}
+          onToggleCollapse={toggleDesktopCollapse}
+          selectedGame={selectedGame}
+          onSelectGame={onSelectGame}
+        />
       </div>
 
       {/* Mobile Drawer (visible only when opened on < 1024px) */}
@@ -24,6 +47,8 @@ export const AppShell: React.FC<AppShellProps> = ({ selectedGame, onSelectGame }
         isOpen={isMobileNavOpen}
         onClose={() => setIsMobileNavOpen(false)}
         isMobile={true}
+        selectedGame={selectedGame}
+        onSelectGame={onSelectGame}
       />
 
       {/* Main Content Area */}
@@ -32,10 +57,12 @@ export const AppShell: React.FC<AppShellProps> = ({ selectedGame, onSelectGame }
           onOpenMobileNav={() => setIsMobileNavOpen(true)}
           selectedGame={selectedGame}
           onSelectGame={onSelectGame}
+          isDesktopCollapsed={isDesktopCollapsed}
+          onToggleDesktopCollapse={toggleDesktopCollapse}
         />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8">
-          <div className="max-w-container mx-auto w-full">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-5 md:p-7">
+          <div className="max-w-container mx-auto w-full min-w-0">
             <Outlet />
           </div>
         </main>
