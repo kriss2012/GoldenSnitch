@@ -52,7 +52,7 @@ export const CompareProgressCard: React.FC<{ className?: string }> = ({ classNam
         {DEFAULT_COMPARISON.map((p, idx) => (
           <div
             key={p.id}
-            onClick={() => navigate(`/players/${p.id}`)}
+            onClick={() => navigate(`/app/players/${p.id}`)}
             className="group cursor-pointer p-2 rounded-xl hover:bg-[#2B2B2B] transition-all duration-150"
           >
             <div className="flex items-center justify-between mb-1.5">
