@@ -152,7 +152,19 @@ GAME_METRICS = {
     "ARENA": sorted({m for d in DIMENSIONS["ARENA"].values() for m, _ in d if m in METRIC_RANGES}),
 }
 
-PROVENANCE_RELIABILITY = {"derived": 1.0, "annotated": 0.9, "simulated": 0.6, "csv": 0.9, "verified_feed": 1.0}
+PROVENANCE_RELIABILITY = {
+    "derived": 1.0,
+    "annotated": 0.9,
+    "simulated": 0.6,
+    "csv": 0.9,
+    "verified_feed": 1.0,
+    "vct_lan_masters_empirical": 1.0,
+    "empirical": 1.0,
+    "riot_api": 0.95,
+    "steam_api": 0.95,
+    "henrikdev_api": 0.95,
+    "official": 1.0,
+}
 ANNOTATION_METRICS = {"decision_quality_score", "leadership_score", "communication_score", "igl_rating"}
 
 MIN_POOL = 8
