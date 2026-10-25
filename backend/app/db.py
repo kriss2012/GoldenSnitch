@@ -7,7 +7,13 @@ from .catalog import GAMES, normalize_game_name
 from .scoring import derive_history_metrics, trend_label
 
 def db_path():
-    return os.environ.get("SCOUTGRID_DB", str(Path(__file__).resolve().parents[2] / "data" / "scoutgrid.db"))
+    env_val = os.environ.get("SCOUTGRID_DB")
+    if not env_val:
+        return str(Path(__file__).resolve().parents[2] / "data" / "scoutgrid.db")
+    p = Path(env_val)
+    if p.is_absolute():
+        return str(p)
+    return str(Path(__file__).resolve().parents[2] / p)
 
 def connect():
     Path(db_path()).parent.mkdir(parents=True, exist_ok=True)
@@ -18,6 +24,26 @@ def connect():
     c.execute("PRAGMA synchronous=NORMAL")
     c.execute("PRAGMA cache_size=-64000")
     c.execute("PRAGMA temp_store=MEMORY")
+
+    # Auto-initialize schema if new or empty database
+    try:
+        tables = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+        if "users" not in tables or "players" not in tables:
+            init(c)
+        if not os.environ.get("SCOUTGRID_DB"):
+            p_cnt = c.execute("SELECT COUNT(*) FROM players").fetchone()[0]
+            if p_cnt < 600:
+                try:
+                    from simulator.generator import Simulator
+                    from .seed import seed
+                    sim = Simulator(seed=42, target_players=600, target_maps=15000)
+                    sim.generate_universe(c)
+                    seed(c, reset=False)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
     return c
 
 SCHEMA = """
@@ -331,18 +357,34 @@ def init(conn):
         )
     
     # Seed initial realistic notifications for Maya (GM) if none exist
+    from datetime import datetime, timezone, timedelta
+    now_utc = datetime.now(timezone.utc)
+    t1 = (now_utc - timedelta(minutes=45)).strftime("%Y-%m-%d %H:%M:%S")
+    t2 = (now_utc - timedelta(hours=2)).strftime("%Y-%m-%d %H:%M:%S")
+    t3 = (now_utc - timedelta(hours=4)).strftime("%Y-%m-%d %H:%M:%S")
+    t4 = (now_utc - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+
     notif_count = conn.execute("SELECT COUNT(*) FROM notifications WHERE user_id='USR-001'").fetchone()[0]
     if notif_count == 0:
         sample_notifs = [
-            ("NTF-001", "USR-001", "vacancy", "Sentinels Vacancy Created", "Priority Controller gap opened for VCT Americas Split 2.", "roster", "1", 0, "2024-10-24 10:30:00"),
-            ("NTF-002", "USR-001", "scouting", "Scouting Recommendation Ready", "Mirage ranked #1 for Sentinels Controller vacancy (74.8 Fit, High confidence).", "player", "VAL-002", 0, "2024-10-24 11:15:00"),
-            ("NTF-003", "USR-001", "analysis", "Decoy Frag Profile Warning", "Voltz flagged as Statistical Decoy (49.3 Fit, 30/100 Utility rating).", "player", "VAL-003", 0, "2024-10-24 12:00:00"),
-            ("NTF-004", "USR-001", "synergy", "Fnatic CS2 Lineup Synced", "Roster coordination index updated to 84.5% synergy across 5 roles.", "roster", "2", 1, "2024-10-23 18:20:00"),
+            ("NTF-001", "USR-001", "vacancy", "Sentinels Vacancy Created", "Priority Controller gap opened for VCT Americas Split 2.", "roster", "1", 0, t1),
+            ("NTF-002", "USR-001", "scouting", "Scouting Recommendation Ready", "Mirage ranked #1 for Sentinels Controller vacancy (74.8 Fit, High confidence).", "player", "VAL-002", 0, t2),
+            ("NTF-003", "USR-001", "analysis", "Decoy Frag Profile Warning", "Voltz flagged as Statistical Decoy (49.3 Fit, 30/100 Utility rating).", "player", "VAL-003", 0, t3),
+            ("NTF-004", "USR-001", "synergy", "Fnatic CS2 Lineup Synced", "Roster coordination index updated to 84.5% synergy across 5 roles.", "roster", "2", 1, t4),
         ]
         conn.executemany(
             "INSERT OR IGNORE INTO notifications(id, user_id, type, title, message, resource_type, resource_id, is_read, created_at) VALUES(?,?,?,?,?,?,?,?,?)",
             sample_notifs
         )
+    else:
+        # Heal stale or glitched dates on initial notifications
+        try:
+            conn.execute("UPDATE notifications SET created_at = ? WHERE id='NTF-001' AND (created_at LIKE '2024-%' OR created_at < datetime('now', '-14 days'))", (t1,))
+            conn.execute("UPDATE notifications SET created_at = ? WHERE id='NTF-002' AND (created_at LIKE '2024-%' OR created_at < datetime('now', '-14 days'))", (t2,))
+            conn.execute("UPDATE notifications SET created_at = ? WHERE id='NTF-003' AND (created_at LIKE '2024-%' OR created_at < datetime('now', '-14 days'))", (t3,))
+            conn.execute("UPDATE notifications SET created_at = ? WHERE id='NTF-004' AND (created_at LIKE '2024-%' OR created_at < datetime('now', '-14 days'))", (t4,))
+        except Exception:
+            pass
 
     # Seed official external data providers
     providers = [

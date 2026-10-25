@@ -140,14 +140,21 @@ export const NotificationDropdown: React.FC = () => {
 
   const formatTime = (ts: string) => {
     try {
-      const date = new Date(ts);
+      if (!ts) return '';
+      // Ensure ISO UTC format for SQLite "YYYY-MM-DD HH:MM:SS" strings
+      const isoTs = ts.includes('T') ? ts : ts.replace(' ', 'T') + (ts.endsWith('Z') ? '' : 'Z');
+      const date = new Date(isoTs);
+      if (isNaN(date.getTime())) return ts;
       const diffMs = Date.now() - date.getTime();
+      if (diffMs < 0) return 'Just now';
       const diffMins = Math.floor(diffMs / 60000);
       if (diffMins < 1) return 'Just now';
       if (diffMins < 60) return `${diffMins}m ago`;
       const diffHours = Math.floor(diffMins / 60);
       if (diffHours < 24) return `${diffHours}h ago`;
-      return `${Math.floor(diffHours / 24)}d ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays <= 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     } catch {
       return ts;
     }

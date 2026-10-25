@@ -761,7 +761,6 @@ def create_roster(b: RosterIn, response: Response):
         return {"id": existing["id"], "name": b.name, "game": norm_game, "status": "existing"}
     cur = c.execute("INSERT INTO rosters(name, game) VALUES(?, ?)", (b.name, norm_game))
     c.commit()
-    response.status_code = 201
     return {"id": cur.lastrowid, "name": b.name, "game": norm_game, "status": "created"}
 
 @app.get("/api/rosters/{rid}")
