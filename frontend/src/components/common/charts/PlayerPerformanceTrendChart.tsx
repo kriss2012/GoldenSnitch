@@ -184,7 +184,7 @@ export const PlayerPerformanceTrendChart: React.FC<PlayerPerformanceTrendChartPr
           </div>
         </div>
 
-        <div style={{ width: '100%', height }} className="pt-2">
+        <div style={{ width: '100%', height }} className="pt-2 min-w-0 overflow-hidden">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
               <defs>
