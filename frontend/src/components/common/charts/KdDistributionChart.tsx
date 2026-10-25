@@ -112,7 +112,7 @@ export const KdDistributionChart: React.FC<KdDistributionChartProps> = ({
       </div>
 
       {/* Composed Chart */}
-      <div className="p-4 bg-[#141414] border border-[#242424] rounded-2xl relative">
+      <div className="p-4 bg-[#141414] border border-[#242424] rounded-2xl relative min-w-0 overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <Swords size={15} className="text-[#10B981]" />
@@ -136,7 +136,7 @@ export const KdDistributionChart: React.FC<KdDistributionChartProps> = ({
           </div>
         </div>
 
-        <div style={{ width: '100%', height }} className="pt-2">
+        <div style={{ width: '100%', height }} className="pt-2 min-w-0 overflow-hidden">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 15, right: 10, left: -15, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
