@@ -320,8 +320,13 @@ export const PlayerProfilePage: React.FC = () => {
           />
 
           <Card title={`Competitive match logs (${player.matchHistory?.length || 0})`}>
-          <div className="overflow-x-auto -mx-5 px-5">
-            <table className="w-full min-w-[640px] text-left border-collapse text-xs">
+            {/* Mobile Swipe Notice */}
+            <div className="sm:hidden flex items-center justify-between text-[11px] text-[#82EAF4] bg-[#142326] px-3.5 py-2 -mx-5 mb-3 border-b border-[#2A3F45]">
+              <span>← Swipe horizontally for full match performance logs →</span>
+            </div>
+
+            <div className="overflow-x-auto -mx-5 px-5">
+              <table className="w-full min-w-[640px] text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-border text-text-muted uppercase text-[11px]">
                   <th className="py-2.5 px-3">Date</th>
