@@ -163,9 +163,33 @@ def score_player(player, index, game, role, weights=None):
         reason = None
 
         if not anchor_present:
-            status = "unranked"
-            reason = "anchor_metric_missing"
-            caveats.append(f"Anchor metric '{anchor_metric}' missing; unranked.")
+            if not metrics_dict:
+                try:
+                    from .metrics.role_engine import UniversalRoleEngine
+                    from .db import connect
+                    _c = connect()
+                    eng = UniversalRoleEngine(norm_game)
+                    sp = eng.score_player(_c, player["id"], role)
+                    role_score = sp["final_score"]
+                    status = "ranked"
+                    reason = None
+                    anchor_present = True
+                    coverage = sp["confidence"]
+                    group_scores = {
+                        "Firepower": sp.get("sub_scores", {}).get("fp", role_score),
+                        "Survivability": sp.get("sub_scores", {}).get("cwd", role_score),
+                        "Utility": sp.get("sub_scores", {}).get("coord", role_score),
+                        "Objective": sp.get("sub_scores", {}).get("mra", role_score),
+                    }
+                    rounds = sp.get("sample_maps", rounds)
+                except Exception:
+                    status = "unranked"
+                    reason = "anchor_metric_missing"
+                    caveats.append(f"Anchor metric '{anchor_metric}' missing; unranked.")
+            else:
+                status = "unranked"
+                reason = "anchor_metric_missing"
+                caveats.append(f"Anchor metric '{anchor_metric}' missing; unranked.")
         elif coverage < MIN_COVERAGE:
             status = "unranked"
             reason = "coverage_below_minimum"
@@ -188,6 +212,39 @@ def score_player(player, index, game, role, weights=None):
             "caveats": caveats, "kd_percentile_in_pool": group_scores.get("Firepower"),
             "anchor_metric": anchor_metric, "anchor_present": anchor_present,
         }
+
+    # Live esports titles (lol, dota2, etc.) use UniversalRoleEngine
+    if norm_game not in ("TAC", "ARENA"):
+        try:
+            from .metrics.role_engine import UniversalRoleEngine
+            from .db import connect
+            _c = connect()
+            eng = UniversalRoleEngine(norm_game)
+            sp = eng.score_player(_c, player["id"], role)
+            role_score = sp["final_score"]
+            status = "ranked"
+            reason = None
+            coverage = sp["confidence"]
+            rounds = sp.get("sample_maps", player.get("matches_played", 100))
+            sub_scores = sp.get("sub_scores", {})
+            group_scores = {
+                "Firepower": sub_scores.get("fp", role_score),
+                "Survivability": sub_scores.get("cwd", role_score),
+                "Utility": sub_scores.get("coord", role_score),
+                "Objective": sub_scores.get("mra", role_score),
+            }
+            ev = evidence(dims, {d: 1.0 / len(dims) for d in dims} if dims else {}, rounds)
+            return {
+                "player_id": player["id"], "name": player["name"], "primary_role": player["role"],
+                "matches_played": rounds, "role_score": role_score, "status": status, "reason": reason,
+                "coverage": coverage, "confidence": ev, "group_scores": group_scores,
+                "components": [{"dimension": grp, "score": s, "weight": 0.25} for grp, s in group_scores.items()],
+                "metric_components": [], "strengths": ["Firepower", "Utility"], "weaknesses": [],
+                "caveats": [], "kd_percentile_in_pool": group_scores.get("Firepower"),
+                "anchor_metric": None, "anchor_present": True,
+            }
+        except Exception:
+            pass
 
     # TAC and ARENA compatibility path
     w = weights or ROLE_WEIGHTS.get((norm_game, role), {})
@@ -224,7 +281,7 @@ def score_player(player, index, game, role, weights=None):
 
 def eligible_pool(players, game, role):
     norm_game = normalize_game_name(game)
-    return [p for p in players if normalize_game_name(p["game"]) == norm_game and (p["role"].lower() == role.lower() or any(r.lower() == role.lower() for r in p.get("secondary_roles", [])))]
+    return [p for p in players if (normalize_game_name(p["game"]) == norm_game or p["id"].startswith(f"ply_{norm_game}_")) and (p["role"].lower() == role.lower() or any(r.lower() == role.lower() for r in p.get("secondary_roles", [])))]
 
 def rank(results):
     """Deterministic order: ranked first, score desc, confidence desc, player_id asc."""

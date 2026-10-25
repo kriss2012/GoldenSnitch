@@ -19,8 +19,8 @@ GAMES = {
     "valorant": {
         "code": "valorant",
         "name": "Valorant",
-        "squad": {"Duelist": 1, "Initiator": 1, "Controller": 1, "Sentinel": 2},
-        "roles": ["Duelist", "Initiator", "Controller", "Sentinel"],
+        "squad": {"IGL": 1, "Duelist": 1, "Initiator": 1, "Controller": 1, "Sentinel": 1},
+        "roles": ["IGL", "Duelist", "Initiator", "Controller", "Sentinel"],
     },
     "cs2": {
         "code": "cs2",
@@ -37,8 +37,8 @@ GAMES = {
     "dota2": {
         "code": "dota2",
         "name": "Dota 2",
-        "squad": {"Carry": 1, "Mid": 1, "Offlane": 1, "Support4": 1, "HardSupport5": 1},
-        "roles": ["Carry", "Mid", "Offlane", "Support4", "HardSupport5"],
+        "squad": {"Carry": 1, "Mid": 1, "Offlane": 1, "SoftSupport": 1, "HardSupport": 1},
+        "roles": ["Carry", "Mid", "Offlane", "SoftSupport", "HardSupport", "Support4", "HardSupport5"],
     },
 }
 
@@ -69,6 +69,12 @@ ROLE_PROFILES = {
         "site_hold_success": ("Objective", 1, 50.0, 80.0, 0.25, False),
         "clutch_win_rate": ("Utility", 1, 15.0, 40.0, 0.25, False),
         "first_death_rate": ("Survivability", -1, 0.05, 0.18, 0.20, False),
+    },
+    ("valorant", "IGL"): {
+        "round_win_rate": ("Objective", 1, 40.0, 65.0, 0.35, True),
+        "assists_per_round": ("Utility", 1, 0.20, 0.60, 0.25, False),
+        "acs": ("Firepower", 1, 140.0, 260.0, 0.20, False),
+        "kast_pct": ("Survivability", 1, 60.0, 85.0, 0.20, False),
     },
     ("cs2", "Entry Fragger"): {
         "opening_duel_success": ("Firepower", 1, 35.0, 65.0, 0.30, True),

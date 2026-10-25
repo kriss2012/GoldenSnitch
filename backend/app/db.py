@@ -392,8 +392,12 @@ def init(conn):
 
 def load_players(conn, game=None):
     norm_game = normalize_game_name(game) if game else None
-    q = "SELECT * FROM players" + (" WHERE game=? OR game=?" if norm_game else "") + " ORDER BY id"
-    params = (norm_game, norm_game.upper()) if norm_game else ()
+    if norm_game:
+        q = "SELECT * FROM players WHERE game=? OR game=? OR id LIKE ? ORDER BY id"
+        params = (norm_game, norm_game.upper(), f"ply_{norm_game}_%")
+    else:
+        q = "SELECT * FROM players ORDER BY id"
+        params = ()
     rows = conn.execute(q, params).fetchall()
 
     hist = {}

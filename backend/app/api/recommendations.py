@@ -7,6 +7,8 @@ Provides:
 
 from __future__ import annotations
 import sqlite3
+import json
+import uuid
 from typing import Dict, List, Any, Optional
 from fastapi import APIRouter, HTTPException, Query, Body
 from pydantic import BaseModel, Field
@@ -19,10 +21,13 @@ router = APIRouter(tags=["Recommendations & Head-to-Head"])
 
 class VacancyRecommendationRequest(BaseModel):
     roster_id: int
-    target_role: str
+    target_role: Optional[str] = None
+    role: Optional[str] = None
     max_budget: float = 250000.0
     min_maps: int = 10
     limit: int = 15
+    top_n: Optional[int] = None
+    sort: Optional[str] = None
 
 
 @router.post("/recommendations")
@@ -36,24 +41,38 @@ def post_recommendations(b: VacancyRecommendationRequest):
     rid, rname, rgame = roster_row
     rec_engine = RecommendationEngine(game_id=rgame)
 
+    active_role = b.target_role or b.role or "IGL"
+    effective_limit = b.top_n or b.limit or 15
+
     results = rec_engine.recommend_for_vacancy(
         conn=conn,
         roster_id=rid,
-        target_role=b.target_role,
+        target_role=active_role,
         max_budget_annual=b.max_budget,
         min_maps=b.min_maps,
-        limit=b.limit
+        limit=effective_limit
     )
 
-    return {
+    rec_id = "REC-" + uuid.uuid4().hex[:10]
+    out = {
+        "id": rec_id,
         "roster_id": rid,
         "roster_name": rname,
         "game": rgame,
-        "target_role": b.target_role,
+        "target_role": active_role,
+        "role": active_role,
         "max_budget": b.max_budget,
         "total_recommended": len(results),
         "candidates": results
     }
+
+    try:
+        conn.execute("INSERT INTO recommendations(id, payload) VALUES(?, ?)", (rec_id, json.dumps(out)))
+        conn.commit()
+    except Exception:
+        pass
+
+    return out
 
 
 @router.get("/rosters/{roster_id}/recommendations")
@@ -119,3 +138,13 @@ def get_head_to_head_comparison(
         "roster_id": roster_id if roster_id > 0 else None,
         **comparison
     }
+
+
+@router.get("/recommendations/{rec_id}")
+@router.get("/api/recommendations/{rec_id}")
+def get_recommendation_by_id(rec_id: str):
+    conn = connect()
+    row = conn.execute("SELECT payload FROM recommendations WHERE id = ?", (rec_id,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Recommendation {rec_id} not found")
+    return json.loads(row[0])

@@ -126,8 +126,10 @@ class RecommendationEngine:
         final_lb = round(max(0.0, min(100.0, final_score - bound_penalty)), 2)
 
         return {
+            "player_id": candidate_id,
             "candidate_id": candidate_id,
             "handle": name,
+            "fit": {"fit_score": round(fit_raw, 2)},
             "team": team_name or "Free Agent",
             "tier": tier or "T2",
             "target_role": target_role,

@@ -50,6 +50,18 @@ class GameConfig(BaseModel):
 
     def get_role(self, role_id: str) -> Optional[RoleConfig]:
         role_lookup = {r.id.lower(): r for r in self.roles}
+        for r in self.roles:
+            role_lookup[r.name.lower()] = r
+            role_lookup[r.name.lower().replace("-", " ").replace("_", " ")] = r
+        # Common aliases
+        if role_id.lower() in ("entry fragger", "entry_fragger", "entry"):
+            for r in self.roles:
+                if r.id.lower() in ("entry", "entry fragger"):
+                    return r
+        if role_id.lower() in ("in-game leader", "in game leader", "igl"):
+            for r in self.roles:
+                if r.id.lower() in ("igl", "in-game leader"):
+                    return r
         return role_lookup.get(role_id.lower())
 
 
