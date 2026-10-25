@@ -72,11 +72,6 @@ except ImportError:
     from app.api.features_1_to_7 import router as features_1_to_7_router
     from app.api.features_8_to_14 import router as features_8_to_14_router
 
-app.include_router(rankings_router)
-app.include_router(rosters_router)
-app.include_router(recommendations_router)
-app.include_router(features_1_to_7_router)
-app.include_router(features_8_to_14_router)
 
 # app.include_router(auth_router) is replaced with unified cookie + bearer endpoints below
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "index.html"
@@ -1776,6 +1771,13 @@ if (DIST_DIR / "assets").exists():
 if (DIST_DIR / "images").exists():
     from fastapi.staticfiles import StaticFiles
     app.mount("/images", StaticFiles(directory=str(DIST_DIR / "images")), name="images")
+
+# Mount sub-routers for extended endpoints
+app.include_router(rankings_router)
+app.include_router(rosters_router)
+app.include_router(recommendations_router)
+app.include_router(features_1_to_7_router)
+app.include_router(features_8_to_14_router)
 
 @app.get("/")
 @app.get("/{full_path:path}")

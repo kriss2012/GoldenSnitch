@@ -97,19 +97,21 @@ def create_roster(b: CreateRosterRequest):
     conn = connect()
     cursor = conn.cursor()
     import json
+    from ..catalog import normalize_game_name
+    norm_game = normalize_game_name(b.game)
     target_json = json.dumps(b.target_profile or {})
 
     cursor.execute("""
         INSERT INTO rosters (name, game, target_profile) VALUES (?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET game=excluded.game, target_profile=excluded.target_profile
-    """, (b.name, b.game.lower(), target_json))
+    """, (b.name, norm_game, target_json))
     conn.commit()
     rid = cursor.execute("SELECT id FROM rosters WHERE name = ?", (b.name,)).fetchone()[0]
 
     return {
         "id": rid,
         "name": b.name,
-        "game": b.game.lower(),
+        "game": norm_game,
         "status": "created"
     }
 
