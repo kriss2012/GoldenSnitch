@@ -13,22 +13,23 @@ interface PlayerAvatarProps {
   className?: string;
 }
 
-// Curated high-resolution esports athlete and agent portraits
+// Curated high-resolution esports athlete and agent portraits from 4K asset pack
 const CURATED_PRO_AVATARS: Record<string, string> = {
-  'TenZ': 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=256&q=80',
-  'Mirage': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-  'Voltz': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80',
-  'Kairo': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
-  'Munchkin': 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80',
-  'Dep': 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=256&q=80',
-  'cNed': 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=256&q=80',
-  'aspas': 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=256&q=80',
-  'Boaster': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&q=80',
-  'Chronicle': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=256&q=80',
-  'Derke': 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=256&q=80',
-  'johnqt': 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=256&q=80',
-  'Zellsis': 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=256&q=80',
-  'Sacy': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80',
+  'valyn': '/assets/golden-snitch/avatar-valyn.png',
+  'TenZ': '/assets/4k/06_Player_Avatars/avatar_01.jpg',
+  'Mirage': '/assets/4k/06_Player_Avatars/avatar_02.jpg',
+  'Voltz': '/assets/4k/06_Player_Avatars/avatar_03.jpg',
+  'Kairo': '/assets/4k/06_Player_Avatars/avatar_04.jpg',
+  'Munchkin': '/assets/4k/06_Player_Avatars/avatar_05.jpg',
+  'Dep': '/assets/4k/06_Player_Avatars/avatar_06.jpg',
+  'cNed': '/assets/4k/06_Player_Avatars/avatar_07.jpg',
+  'aspas': '/assets/4k/06_Player_Avatars/avatar_08.jpg',
+  'Boaster': '/assets/4k/06_Player_Avatars/avatar_09.jpg',
+  'Chronicle': '/assets/4k/06_Player_Avatars/avatar_10.jpg',
+  'Derke': '/assets/4k/06_Player_Avatars/avatar_05.jpg',
+  'johnqt': '/assets/4k/06_Player_Avatars/avatar_06.jpg',
+  'Zellsis': '/assets/4k/06_Player_Avatars/avatar_07.jpg',
+  'Sacy': '/assets/4k/06_Player_Avatars/avatar_08.jpg',
 };
 
 const SIZE_MAP = {
@@ -52,7 +53,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
-  const resolvedUrl = imageUrl || CURATED_PRO_AVATARS[handle] || null;
+  // Deterministic 4K fallback for any player without explicit avatar
+  const hash = Math.abs((handle || 'player').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0));
+  const fallback4k = `/assets/4k/06_Player_Avatars/avatar_${String((hash % 10) + 1).padStart(2, '0')}.jpg`;
+  const resolvedUrl = imageUrl || CURATED_PRO_AVATARS[handle] || fallback4k;
 
   // Normalized role color theme
   const getRoleTheme = (r: string) => {
