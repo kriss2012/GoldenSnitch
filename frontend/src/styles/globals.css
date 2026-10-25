@@ -53,11 +53,11 @@
     background-attachment: fixed;
     color: #F5F5F5;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
-    font-family: 'Figtree', sans-serif;
+    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bricolage Grotesque', sans-serif;
+    font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #F3F5F7;
     letter-spacing: -0.015em;
   }
