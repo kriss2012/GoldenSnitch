@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+
+const RedirectToPlayer = () => {
+  const { playerId } = useParams();
+  return <Navigate to={`/app/players/${playerId}`} replace />;
+};
 import { AuthProvider } from './auth/AuthContext';
 import { PublicOnly, RequireAuth } from './auth/guards';
 import { AppShell } from './components/layout/AppShell';
@@ -84,6 +89,7 @@ export function App() {
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/scouting" element={<Navigate to="/app/scouting" replace />} />
             <Route path="/players" element={<Navigate to="/app/players" replace />} />
+            <Route path="/players/:playerId" element={<RedirectToPlayer />} />
             <Route path="/compare" element={<Navigate to="/app/compare" replace />} />
             <Route path="/rosters" element={<Navigate to="/app/rosters" replace />} />
             <Route path="/synergy" element={<Navigate to="/app/synergy" replace />} />
