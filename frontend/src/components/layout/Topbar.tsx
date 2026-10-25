@@ -66,13 +66,9 @@ export const Topbar: React.FC<TopbarProps> = ({
           title="Golden Snitch — Esports Intelligence"
         >
           <img
-            src="/assets/golden-snitch/golden-snitch-emblem.png"
-            alt="Golden Snitch Emblem"
-            className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_8px_rgba(245,184,61,0.4)]"
-            onError={(e) => {
-              // Fallback to roundel if emblem not found
-              (e.target as HTMLImageElement).src = '/assets/golden-snitch/golden-snitch-roundel.png';
-            }}
+            src="/assets/golden-snitch/golden-snitch-winged.png"
+            alt="Golden Snitch"
+            className="h-8 sm:h-9 w-auto max-w-[56px] object-contain drop-shadow-[0_0_12px_rgba(245,184,61,0.55)] group-hover:scale-105 transition-transform"
           />
           <div className="hidden sm:block">
             <h1 className="text-sm md:text-base font-extrabold italic text-[#F5B83D] tracking-wide font-heading leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
