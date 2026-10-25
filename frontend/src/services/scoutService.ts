@@ -29,7 +29,7 @@ export const scoutService = {
 
   getPlayerById(id: string): Player | undefined {
     const all = this.getPlayers();
-    return all.find(p => p.id === id);
+    return all.find(p => p.id === id || p.handle.toLowerCase() === id.toLowerCase());
   },
 
   getRosters(): Roster[] {
