@@ -31,6 +31,7 @@ import { PublicProfilePage } from './pages/PublicProfilePage';
 import { SharedReportPage } from './pages/SharedReportPage';
 import { TermsPage } from './pages/legal/TermsPage';
 import { PrivacyPage } from './pages/legal/PrivacyPage';
+import { CognitiveLabPage } from './features/cognitive';
 import { GameTitle } from './types';
 
 export function App() {
@@ -79,6 +80,7 @@ export function App() {
               <Route path="synergy" element={<SynergyPage />} />
               <Route path="watchlist" element={<WatchlistPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="cognitive-lab" element={<CognitiveLabPage />} />
               <Route path="organization" element={<OrganizationPage />} />
               <Route path="data-sources" element={<DataSourcesPage />} />
               <Route path="settings" element={<SettingsPage />} />
@@ -86,6 +88,7 @@ export function App() {
             </Route>
 
             {/* Direct convenience aliases within authenticated session */}
+            <Route path="/cognitive-lab" element={<Navigate to="/app/cognitive-lab" replace />} />
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/scouting" element={<Navigate to="/app/scouting" replace />} />
             <Route path="/players" element={<Navigate to="/app/players" replace />} />

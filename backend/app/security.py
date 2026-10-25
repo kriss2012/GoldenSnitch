@@ -1,4 +1,8 @@
-import os, time, jwt
+import os, time
+try:
+    import jwt
+except ImportError:
+    from jose import jwt
 from passlib.context import CryptContext
 
 pwd = CryptContext(schemes=["argon2"], deprecated="auto")

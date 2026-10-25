@@ -12,4 +12,8 @@ scipy>=1.13.0
 scikit-learn>=1.4.0
 pulp>=2.8.0
 openpyxl>=3.1.2
-
+slowapi>=0.1.9
+passlib>=1.7.4
+argon2-cffi>=23.1.0
+pyjwt>=2.8.0
+python-multipart>=0.0.9
