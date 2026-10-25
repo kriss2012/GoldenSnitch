@@ -32,7 +32,7 @@ export function App() {
   const [selectedGame, setSelectedGame] = useState<GameTitle>('VALORANT');
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <Routes>
           {/* Public-Only Routes (Redirect to /app if already logged in) */}
