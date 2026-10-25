@@ -1,8 +1,7 @@
 import React from 'react';
-import { ChevronRight, Award, Flame, Star, ShieldCheck } from 'lucide-react';
+import { ChevronRight, BarChart3, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PlayerAvatar } from './PlayerAvatar';
-import { RoleBadge } from './RoleBadge';
 
 interface ComparePlayer {
   id: string;
@@ -19,28 +18,32 @@ const DEFAULT_COMPARISON: ComparePlayer[] = [
   { id: 'VAL-002', name: 'Mirage', role: 'Controller (IGL)', hours: 102, score: 74.8, progressPercent: 78, badge: 'Top 1 Fit', isTop: true },
   { id: 'VAL-003', name: 'Voltz', role: 'Duelist', hours: 232, score: 49.3, progressPercent: 49, badge: 'High ACS' },
   { id: 'VAL-001', name: 'TenZ', role: 'Initiator/Duelist', hours: 77, score: 88.5, progressPercent: 88, badge: 'Star Player' },
-  { id: 'VAL-LAN-4B30D9', name: 'Munchkin', role: 'Controller (IGL)', hours: 85, score: 82.0, progressPercent: 82, badge: 'LAN Captain' },
 ];
 
 export const CompareProgressCard: React.FC<{ className?: string }> = ({ className = '' }) => {
   const navigate = useNavigate();
 
   return (
-    <div className={`bg-[#242424] border border-[#353535] rounded-2xl p-5 sm:p-6 text-[#F5F5F5] ${className}`}>
-      {/* Card Header */}
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#353535]">
-        <div>
-          <h3 className="text-base font-semibold font-heading text-[#F5F5F5] tracking-tight">
-            Compare progress
-          </h3>
-          <p className="text-xs text-[#B8B8B8] mt-0.5">Benchmarking candidate fit vs vacancy</p>
+    <div className={`bg-[#151515] border border-[#262626] rounded-2xl p-4 sm:p-5 text-[#F5F5F5] shadow-[0_4px_24px_rgba(0,0,0,0.5)] ${className}`}>
+      {/* Card Header matching Image 1 */}
+      <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-[#222222]">
+        <div className="flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-lg bg-[#82EAF4]/15 border border-[#82EAF4]/30 flex items-center justify-center text-[#82EAF4] shrink-0">
+            <BarChart3 size={16} />
+          </span>
+          <div>
+            <h3 className="text-sm sm:text-base font-bold font-heading text-[#F5F5F5] tracking-tight">
+              Compare progress
+            </h3>
+            <p className="text-[11px] text-[#8E8E8E] mt-0.5">Benchmarking candidate fit vs vacancy</p>
+          </div>
         </div>
         <button
           onClick={() => navigate('/compare')}
-          className="w-8 h-8 rounded-full bg-[#2B2B2B] border border-[#353535] flex items-center justify-center text-[#B8B8B8] hover:text-[#82EAF4] hover:border-[#82EAF4]/50 transition-colors"
+          className="w-7 h-7 rounded-full bg-[#1F1F1F] border border-[#2B2B2B] flex items-center justify-center text-[#B8B8B8] hover:text-[#82EAF4] hover:border-[#82EAF4]/50 transition-colors"
           title="Open Comparison Matrix"
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={15} />
         </button>
       </div>
 
