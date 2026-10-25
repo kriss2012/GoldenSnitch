@@ -4,7 +4,7 @@ import { Player } from '../../types';
 import { scoutService } from '../../services/scoutService';
 
 interface ShortlistButtonProps {
-  player: Player;
+  player: Player | (Partial<Player> & { id: string; handle: string; game?: any; role?: string; team?: string; talentIndex?: number });
   size?: 'sm' | 'md';
   onToggle?: (isShortlisted: boolean) => void;
   className?: string;
@@ -31,7 +31,7 @@ export const ShortlistButton: React.FC<ShortlistButtonProps> = ({
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const newState = scoutService.toggleWatchlist(player, 'Shortlisted');
+    const newState = scoutService.toggleWatchlist(player as Player, 'Shortlisted');
     setIsShortlisted(newState);
     window.dispatchEvent(new CustomEvent('scoutgrid_watchlist_changed'));
     if (onToggle) onToggle(newState);
