@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { rankingsService, RankedPlayer } from '../../services/rankingsService';
 import { IglIntelligenceModal } from './IglIntelligenceModal';
+import { PlayerAvatar } from '../common/PlayerAvatar';
+import { ShortlistButton } from '../common/ShortlistButton';
 
 interface TalentExplorerTableProps {
   initialGame?: string;
@@ -339,156 +341,200 @@ export const TalentExplorerTable: React.FC<TalentExplorerTableProps> = ({
             No players matched the current filters. Try lowering the minimum maps threshold.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-[#303030] bg-[#121212] text-[#B8B8B8] uppercase text-[10px] tracking-wider select-none">
-                  <th className="py-3 px-3 w-10 text-center">
-                    <span className="sr-only">Compare</span>
-                  </th>
-                  <th className="py-3 px-3 w-12 text-center">Rank</th>
-                  <th className="py-3 px-4">Player / Team</th>
-                  <th className="py-3 px-3 text-center">Role</th>
-                  <th className="py-3 px-3 text-center">Tier</th>
-                  <th className="py-3 px-4 text-center">Role Fit Score</th>
-                  <th className="py-3 px-4 text-center">80% Credible Range</th>
-                  <th className="py-3 px-3 text-center">Sample Maps</th>
-                  <th className="py-3 px-4">Risk Profiling</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2B2B2B]">
-                {displayedPlayers.map((player) => {
-                  const isSelected = selectedForCompare.includes(player.player_id);
-                  const isIgl = player.role.toUpperCase() === 'IGL';
+          <div className="w-full">
+            {/* Mobile swipe indicator */}
+            <div className="sm:hidden flex items-center justify-between text-[11px] text-[#82EAF4] bg-[#142326] px-3.5 py-2 border-b border-[#2A3F45]">
+              <span className="flex items-center gap-1.5 font-medium">
+                <span>←</span> Swipe horizontally to inspect full metrics &amp; shortlist <span>→</span>
+              </span>
+              <span className="text-[10px] text-[#8E8E8E] font-mono">{displayedPlayers.length} pros</span>
+            </div>
 
-                  return (
-                    <tr
-                      key={player.player_id}
-                      className="hover:bg-[#202020]/80 transition-colors group"
-                    >
-                      {/* Checkbox for compare */}
-                      <td className="py-3 px-3 text-center">
-                        <button
-                          onClick={() => toggleCompare(player.player_id)}
-                          className="text-[#777777] hover:text-[#82EAF4] transition-colors"
-                          title="Select for head-to-head comparison"
-                        >
-                          {isSelected ? (
-                            <CheckSquare size={16} className="text-[#82EAF4]" />
-                          ) : (
-                            <Square size={16} />
-                          )}
-                        </button>
-                      </td>
+            <div className="overflow-x-auto -mx-0">
+              <table className="w-full min-w-[760px] text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-[#303030] bg-[#121212] text-[#B8B8B8] uppercase text-[10px] tracking-wider select-none">
+                    <th className="py-3 px-3 w-10 text-center">
+                      <span className="sr-only">Compare</span>
+                    </th>
+                    <th className="py-3 px-3 w-12 text-center">Rank</th>
+                    <th className="py-3 px-4">Player / Team</th>
+                    <th className="py-3 px-3 text-center">Role</th>
+                    <th className="py-3 px-3 text-center">Tier</th>
+                    <th className="py-3 px-4 text-center">Role Fit Score</th>
+                    <th className="py-3 px-4 text-center">80% Credible Range</th>
+                    <th className="py-3 px-3 text-center">Sample Maps</th>
+                    <th className="py-3 px-4">Risk Profiling</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2B2B2B]">
+                  {displayedPlayers.map((player) => {
+                    const isSelected = selectedForCompare.includes(player.player_id);
+                    const isIgl = player.role.toUpperCase() === 'IGL';
 
-                      {/* Rank */}
-                      <td className="py-3 px-3 text-center font-mono font-bold text-[#B8B8B8]">
-                        #{player.rank}
-                      </td>
-
-                      {/* Player Handle & Team */}
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-[#F5F5F5] group-hover:text-[#82EAF4] transition-colors flex items-center gap-1.5">
-                          {player.handle}
-                          {isIgl && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#82EAF4]/20 text-[#82EAF4] border border-[#82EAF4]/30">
-                              IGL
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-[#777777] mt-0.5">
-                          {player.team} • {player.region}
-                        </div>
-                      </td>
-
-                      {/* Role */}
-                      <td className="py-3 px-3 text-center font-medium text-[#F5F5F5]">
-                        <span className="px-2 py-0.5 rounded-md bg-[#242424] border border-[#353535]">
-                          {player.role}
-                        </span>
-                      </td>
-
-                      {/* Tier */}
-                      <td className="py-3 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          player.tier === 'T1'
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                            : player.tier === 'T2'
-                            ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                            : 'bg-zinc-800 text-zinc-400'
-                        }`}>
-                          {player.tier}
-                        </span>
-                      </td>
-
-                      {/* Role Fit Score */}
-                      <td className="py-3 px-4 text-center">
-                        <div className="inline-flex items-baseline gap-1">
-                          <span className="text-base font-extrabold text-[#82EAF4]">
-                            {player.overall_score.toFixed(1)}
-                          </span>
-                          <span className="text-[10px] text-[#777777]">/100</span>
-                        </div>
-                      </td>
-
-                      {/* 80% Credible Range */}
-                      <td className="py-3 px-4 text-center">
-                        <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold bg-[#122326] text-[#82EAF4] border border-[#82EAF4]/30">
-                          [{player.final_lb.toFixed(1)} – {player.overall_score.toFixed(1)}]
-                        </span>
-                      </td>
-
-                      {/* Sample Maps & Confidence */}
-                      <td className="py-3 px-3 text-center font-mono text-xs text-[#B8B8B8]">
-                        <div>{player.sample_maps} maps</div>
-                        <div className="text-[10px] text-[#777777]">{(player.confidence * 100).toFixed(0)}% conf</div>
-                      </td>
-
-                      {/* Risk Profiling Chips */}
-                      <td className="py-3 px-4">
-                        <div className="flex flex-wrap gap-1">
-                          {player.risk_flags.length === 0 ? (
-                            <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                              <Shield size={11} /> Clean Profile
-                            </span>
-                          ) : (
-                            player.risk_flags.map((rf) => (
-                              <span
-                                key={rf}
-                                className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                              >
-                                {rf}
-                              </span>
-                            ))
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
-                        {isIgl && (
+                    return (
+                      <tr
+                        key={player.player_id}
+                        className="hover:bg-[#202020]/80 transition-colors group"
+                      >
+                        {/* Checkbox for compare */}
+                        <td className="py-3 px-3 text-center">
                           <button
-                            onClick={() => setInspectingIgl({ id: player.player_id, handle: player.handle })}
-                            className="px-2.5 py-1 rounded-lg bg-[#82EAF4]/15 hover:bg-[#82EAF4]/25 text-[#82EAF4] border border-[#82EAF4]/30 font-semibold text-[11px] transition-all inline-flex items-center gap-1"
+                            onClick={() => toggleCompare(player.player_id)}
+                            className="min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-[#777777] hover:text-[#82EAF4] transition-colors"
+                            title="Select for head-to-head comparison"
                           >
-                            <Activity size={12} />
-                            IGL Intel
+                            {isSelected ? (
+                              <CheckSquare size={17} className="text-[#82EAF4]" />
+                            ) : (
+                              <Square size={17} />
+                            )}
                           </button>
-                        )}
-                        <button
-                          onClick={() => navigate(`/players/${player.player_id}`)}
-                          className="px-2.5 py-1 rounded-lg bg-[#242424] hover:bg-[#2B2B2B] text-[#B8B8B8] hover:text-[#F5F5F5] border border-[#353535] font-semibold text-[11px] transition-all inline-flex items-center gap-1"
-                        >
-                          <Eye size={12} />
-                          Profile
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+
+                        {/* Rank */}
+                        <td className="py-3 px-3 text-center font-mono font-bold text-[#B8B8B8]">
+                          #{player.rank}
+                        </td>
+
+                        {/* Player Avatar, Handle & Team */}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2.5">
+                            <PlayerAvatar
+                              handle={player.handle}
+                              role={player.role}
+                              game={game}
+                              size="sm"
+                              rank={player.rank <= 3 ? player.rank : undefined}
+                            />
+                            <div>
+                              <div className="font-bold text-[#F5F5F5] group-hover:text-[#82EAF4] transition-colors flex items-center gap-1.5">
+                                {player.handle}
+                                {isIgl && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#82EAF4]/20 text-[#82EAF4] border border-[#82EAF4]/30">
+                                    IGL
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-[#777777] mt-0.5">
+                                {player.team} • {player.region}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Role */}
+                        <td className="py-3 px-3 text-center font-medium text-[#F5F5F5]">
+                          <span className="px-2 py-0.5 rounded-md bg-[#242424] border border-[#353535]">
+                            {player.role}
+                          </span>
+                        </td>
+
+                        {/* Tier */}
+                        <td className="py-3 px-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            player.tier === 'T1'
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              : player.tier === 'T2'
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              : 'bg-zinc-800 text-zinc-400'
+                          }`}>
+                            {player.tier}
+                          </span>
+                        </td>
+
+                        {/* Role Fit Score */}
+                        <td className="py-3 px-4 text-center">
+                          <div className="inline-flex items-baseline gap-1">
+                            <span className="text-base font-extrabold text-[#82EAF4]">
+                              {player.overall_score.toFixed(1)}
+                            </span>
+                            <span className="text-[10px] text-[#777777]">/100</span>
+                          </div>
+                        </td>
+
+                        {/* 80% Credible Range */}
+                        <td className="py-3 px-4 text-center">
+                          <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold bg-[#122326] text-[#82EAF4] border border-[#82EAF4]/30">
+                            [{player.final_lb.toFixed(1)} – {player.overall_score.toFixed(1)}]
+                          </span>
+                        </td>
+
+                        {/* Sample Maps & Confidence */}
+                        <td className="py-3 px-3 text-center font-mono text-xs text-[#B8B8B8]">
+                          <div>{player.sample_maps} maps</div>
+                          <div className="text-[10px] text-[#777777]">{(player.confidence * 100).toFixed(0)}% conf</div>
+                        </td>
+
+                        {/* Risk Profiling Chips */}
+                        <td className="py-3 px-4">
+                          <div className="flex flex-wrap gap-1">
+                            {player.risk_flags.length === 0 ? (
+                              <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                                <Shield size={11} /> Clean Profile
+                              </span>
+                            ) : (
+                              player.risk_flags.map((rf) => (
+                                <span
+                                  key={rf}
+                                  className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                >
+                                  {rf}
+                                </span>
+                              ))
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Actions: Shortlist + IGL Intel + Profile */}
+                        <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+                          <ShortlistButton
+                            player={{
+                              id: player.player_id,
+                              handle: player.handle,
+                              realName: player.handle,
+                              game: 'VALORANT',
+                              role: player.role,
+                              team: player.team,
+                              talentIndex: player.overall_score,
+                              confidence: 'High confidence',
+                              matchesPlayed: player.sample_maps,
+                              trend: 3.2,
+                              nationality: player.region,
+                              region: player.region,
+                              age: 21,
+                              availability: 'Available',
+                              salaryK: player.contract?.salary ? Math.round(player.contract.salary / 1000) : 180,
+                              lastAnalyzed: 'Today',
+                              primaryStrength: 'Mechanics',
+                              keyConcern: 'None',
+                            }}
+                            size="sm"
+                          />
+                          {isIgl && (
+                            <button
+                              onClick={() => setInspectingIgl({ id: player.player_id, handle: player.handle })}
+                              className="min-h-[36px] px-3 py-1.5 rounded-lg bg-[#82EAF4]/15 hover:bg-[#82EAF4]/25 text-[#82EAF4] border border-[#82EAF4]/30 font-semibold text-[11px] transition-all inline-flex items-center gap-1"
+                            >
+                              <Activity size={13} />
+                              IGL Intel
+                            </button>
+                          )}
+                          <button
+                            onClick={() => navigate(`/players/${player.player_id}`)}
+                            className="min-h-[36px] px-3 py-1.5 rounded-lg bg-[#242424] hover:bg-[#2B2B2B] text-[#B8B8B8] hover:text-[#F5F5F5] border border-[#353535] font-semibold text-[11px] transition-all inline-flex items-center gap-1"
+                          >
+                            <Eye size={13} />
+                            Profile
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
