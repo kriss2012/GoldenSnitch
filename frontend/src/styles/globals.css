@@ -3,90 +3,112 @@
 @tailwind utilities;
 
 :root {
-  --void: #090014;
-  --surface: #140026;
-  --surface-raised: #20023b;
-  --plum: #620a96;
-
-  /* Bright Gamified Violet & Electric Gaming Accents */
-  --brand: #5662f6;
-  --violet: #9b30ff;
-  --violet-glow: #b24bf3;
-  --violet-pressed: #7d1fd4;
-  --lilac: #d187ff;
-
-  --text: #f8f0ff;
-  --text-muted: #c8b0e8;
-  --border: #3f1568;
-  --border-bright: #6924aa;
-
+  /* Aligned Tokens to Charcoal, Cyan, and Gold Dashboard Design System */
+  --void: #121212;
+  --surface: #181818;
+  --surface-raised: #242424;
+  --plum: #182226;
+  --brand: #82EAF4;
+  --violet: #82EAF4;
+  --violet-glow: rgba(130, 234, 244, 0.35);
+  --violet-pressed: #64E8F2;
+  --lilac: #82EAF4;
+  --text: #F5F5F5;
+  --text-muted: #B8B8B8;
+  --border: #353535;
+  --border-bright: #454545;
   --success: #4ade80;
-  --warning: #fbbf24;
+  --warning: #F5B83D;
   --danger: #f87171;
+
+  /* Exact Golden Snitch Reference Design Tokens */
+  --bg-main: #0B0B0B;
+  --bg-sidebar: #101010;
+  --card-primary: #242424;
+  --panel-elevated: #2B2B2B;
+  --panel-hover: #353535;
+  --border-subtle: #353535;
+  --border-highlight: #454545;
+  --text-primary: #F5F5F5;
+  --text-secondary: #B8B8B8;
+  --text-dim: #777777;
+
+  /* Cyan & Muted Series Tokens */
+  --cyan: #82EAF4;
+  --cyan-hover: #64E8F2;
+  --cyan-muted: #788B8D;
+  --cyan-glow: rgba(130, 234, 244, 0.25);
+  --cyan-border: rgba(130, 234, 244, 0.40);
+  --cyan-bg: rgba(130, 234, 244, 0.08);
 
   color-scheme: dark;
 }
 
 @layer base {
   body {
-    background-color: var(--void);
+    background-color: #0B0B0B;
     background-image: 
-      radial-gradient(circle at 50% -10%, rgba(155, 48, 255, 0.28) 0%, transparent 60%),
-      radial-gradient(circle at 100% 50%, rgba(86, 98, 246, 0.16) 0%, transparent 45%),
-      radial-gradient(circle at 0% 85%, rgba(120, 15, 190, 0.18) 0%, transparent 45%);
+      radial-gradient(circle at 50% -10%, rgba(130, 234, 244, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 100% 40%, rgba(120, 139, 141, 0.04) 0%, transparent 40%);
     background-attachment: fixed;
-    color: var(--text);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    color: #F5F5F5;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    font-family: 'Figtree', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Bricolage Grotesque', sans-serif;
-    color: var(--text);
+    color: #F3F5F7;
+    letter-spacing: -0.015em;
   }
 
-  /* Accessible focus rings */
+  /* Accessible Cyan Focus Indicators */
   :focus-visible {
-    outline: 2px solid var(--lilac);
+    outline: 2px solid #64E8F2;
     outline-offset: 2px;
   }
 
-  /* Prevent unintended body overflow */
   html, body {
     max-width: 100%;
-    overflow-x: hidden;
   }
 }
 
-/* Custom scrollbar for data tables and panels */
+/* Diagonal Striped Hatch Pattern for Activity Heatmap (0h State from Reference) */
+.bg-striped-pattern {
+  background-color: #171B21;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    #171B21,
+    #171B21 3px,
+    #222933 3px,
+    #222933 6px
+  );
+}
+
+/* Glass & Glow Highlights */
+.glow-cyan-sm {
+  box-shadow: 0 0 15px -3px rgba(100, 232, 242, 0.25);
+}
+
+.glow-cyan-md {
+  box-shadow: 0 0 25px -4px rgba(100, 232, 242, 0.35);
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: var(--void);
+  background: #101318;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+  background: #2A3039;
+  border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--plum);
-}
-
-/* Tabular figures */
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-delay: -1ms !important;
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    background-attachment: initial !important;
-    scroll-behavior: auto !important;
-    transition-delay: 0s !important;
-    transition-duration: 0s !important;
-  }
+  background: #64E8F2;
 }

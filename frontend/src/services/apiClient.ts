@@ -27,6 +27,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers.set('Content-Type', 'application/json');
   }
   
+  if (!headers.has('X-Requested-With')) {
+    headers.set('X-Requested-With', 'golden-snitch');
+  }
+
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
@@ -34,6 +38,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
 
   const res = await fetch(url, {
+    credentials: 'include',
     ...options,
     headers,
   });

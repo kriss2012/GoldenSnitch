@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthContext';
+import { PublicOnly, RequireAuth } from './auth/guards';
 import { AppShell } from './components/layout/AppShell';
+
+import Landing from './pages/Landing';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+
 import { DashboardPage } from './pages/DashboardPage';
 import { ScoutingPage } from './pages/ScoutingPage';
 import { PlayerDatabasePage } from './pages/PlayerDatabasePage';
@@ -13,31 +20,13 @@ import { SynergyPage } from './pages/SynergyPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { LoginPage } from './pages/auth/LoginPage';
-import { RegisterPage } from './pages/auth/RegisterPage';
-import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { OrganizationPage } from './pages/OrganizationPage';
+import { DataSourcesPage } from './pages/DataSourcesPage';
+import { PublicProfilePage } from './pages/PublicProfilePage';
+import { SharedReportPage } from './pages/SharedReportPage';
+import { TermsPage } from './pages/legal/TermsPage';
+import { PrivacyPage } from './pages/legal/PrivacyPage';
 import { GameTitle } from './types';
-
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-void flex flex-col items-center justify-center text-text-muted gap-3">
-        <Loader2 size={36} className="animate-spin text-violet" />
-        <span className="font-mono text-xs text-lilac">Initializing Golden Snitch Engine...</span>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
 
 export function App() {
   const [selectedGame, setSelectedGame] = useState<GameTitle>('VALORANT');
@@ -46,37 +35,67 @@ export function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public Authentication Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* Public-Only Routes (Redirect to /app if already logged in) */}
+          <Route element={<PublicOnly />}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+          </Route>
 
-          {/* Protected Application Routes */}
-          <Route
-            element={
-              <ProtectedRoute>
+          {/* Public Informational / Legal Routes */}
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/p/:slug" element={<PublicProfilePage />} />
+          <Route path="/players/:game/:handle" element={<PublicProfilePage />} />
+          <Route path="/reports/shared/:shareToken" element={<SharedReportPage />} />
+
+          {/* Protected Application Routes (Redirect to /login if not authenticated) */}
+          <Route element={<RequireAuth />}>
+            <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
+            <Route
+              path="/app/*"
+              element={
                 <AppShell
                   selectedGame={selectedGame}
                   onSelectGame={setSelectedGame}
                 />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage selectedGame={selectedGame} />} />
-            <Route path="/scouting" element={<ScoutingPage selectedGame={selectedGame} onSelectGame={setSelectedGame} />} />
-            <Route path="/players" element={<PlayerDatabasePage />} />
-            <Route path="/players/:playerId" element={<PlayerProfilePage />} />
-            <Route path="/compare" element={<ComparePage />} />
-            <Route path="/rosters" element={<RostersPage />} />
-            <Route path="/rosters/:rosterId" element={<RostersPage />} />
-            <Route path="/synergy" element={<SynergyPage />} />
-            <Route path="/watchlist" element={<WatchlistPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              }
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<DashboardPage selectedGame={selectedGame} />} />
+              <Route path="scouting" element={<ScoutingPage selectedGame={selectedGame} onSelectGame={setSelectedGame} />} />
+              <Route path="players" element={<PlayerDatabasePage />} />
+              <Route path="players/:playerId" element={<PlayerProfilePage />} />
+              <Route path="compare" element={<ComparePage />} />
+              <Route path="rosters" element={<RostersPage />} />
+              <Route path="rosters/:rosterId" element={<RostersPage />} />
+              <Route path="synergy" element={<SynergyPage />} />
+              <Route path="watchlist" element={<WatchlistPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="organization" element={<OrganizationPage />} />
+              <Route path="data-sources" element={<DataSourcesPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="dashboard" replace />} />
+            </Route>
+
+            {/* Direct convenience aliases within authenticated session */}
+            <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/scouting" element={<Navigate to="/app/scouting" replace />} />
+            <Route path="/players" element={<Navigate to="/app/players" replace />} />
+            <Route path="/compare" element={<Navigate to="/app/compare" replace />} />
+            <Route path="/rosters" element={<Navigate to="/app/rosters" replace />} />
+            <Route path="/synergy" element={<Navigate to="/app/synergy" replace />} />
+            <Route path="/watchlist" element={<Navigate to="/app/watchlist" replace />} />
+            <Route path="/reports" element={<Navigate to="/app/reports" replace />} />
+            <Route path="/organization" element={<Navigate to="/app/organization" replace />} />
+            <Route path="/data-sources" element={<Navigate to="/app/data-sources" replace />} />
+            <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
           </Route>
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

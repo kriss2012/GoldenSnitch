@@ -1,0 +1,91 @@
+game_id: lol
+name: League of Legends
+config_version: "1.0.0"
+data_type: event_based
+default_roster_size: 5
+peak_age_range: [19, 24]
+
+roles:
+  - id: Top
+    name: Top Laner
+    description: Side-lane duel pressure, split pusher, and frontline teleport initiator.
+    min_samples_maps: 15
+    is_shotcaller_eligible: false
+    weights:
+      isolated_death_rate_inv: 0.22
+      gold_diff_15: 0.20
+      damage_share: 0.18
+      tp_flank_impact: 0.16
+      cs_per_min: 0.14
+      teamfight_impact: 0.10
+
+  - id: Jungle
+    name: Jungler / Shot Caller
+    description: Objective secure specialist, tempo driver, gank orchestrator, and shot caller.
+    min_samples_maps: 15
+    is_shotcaller_eligible: true
+    weights:
+      objective_control_rate: 0.24
+      early_gank_success: 0.20
+      vision_score_per_min: 0.18
+      macro_call_win_delta: 0.16
+      draft_contribution: 0.12
+      gold_diff_15: 0.10
+
+  - id: Mid
+    name: Mid Laner
+    description: Primary magic/burst damage dealer, wave clear anchor, and river roamer.
+    min_samples_maps: 15
+    is_shotcaller_eligible: false
+    weights:
+      damage_per_min: 0.24
+      gold_diff_15: 0.20
+      roam_impact: 0.18
+      cs_at_15: 0.15
+      kill_participation: 0.13
+      vision_score_per_min: 0.10
+
+  - id: ADC
+    name: Attack Damage Carry (Bot)
+    description: Late game physical damage insurance, siege focal point, and teamfight carry.
+    min_samples_maps: 15
+    is_shotcaller_eligible: false
+    weights:
+      dpm: 0.26
+      gold_share_conversion: 0.20
+      cs_per_min: 0.18
+      survival_rate_teamfights: 0.14
+      gold_diff_15: 0.12
+      kill_participation: 0.10
+
+  - id: Support
+    name: Support / Primary Shot-Caller
+    description: Vision architect, lane partner protector, engage director, and macro leader.
+    min_samples_maps: 15
+    is_shotcaller_eligible: true
+    weights:
+      vision_score_per_min: 0.25
+      roam_conversion_rate: 0.20
+      macro_call_win_delta: 0.18
+      kill_participation: 0.15
+      teamfight_peel_score: 0.12
+      lane_dominance_15: 0.10
+
+champion_pools:
+  Top: [Aatrox, K'Sante, Renekton, Gnar, Rumble, Jax, Ornn]
+  Jungle: [Lee Sin, Vi, Sejuani, Jarvan IV, Viego, Xin Zhao, Maokai]
+  Mid: [Azir, Orianna, Ahri, Sylas, Syndra, Taliyah, Corki]
+  ADC: [Kai'Sa, Varus, Jinx, Kalista, Xayah, Ashe, Ezreal]
+  Support: [Nautilus, Rakan, Thresh, Leona, Renata Glasc, Lulu, Braum]
+
+style_dimensions:
+  - aggression
+  - entry_rate
+  - risk_taking
+  - utility_reliance
+  - economy_discipline
+  - adaptability
+  - lurk_tendency
+  - comms_load
+  - clutch_reliance
+  - pool_flexibility

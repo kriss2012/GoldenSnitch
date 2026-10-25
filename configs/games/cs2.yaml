@@ -1,0 +1,132 @@
+game_id: cs2
+name: Counter-Strike 2
+config_version: "1.0.0"
+data_type: round_based
+default_roster_size: 5
+peak_age_range: [21, 26]
+
+roles:
+  - id: IGL
+    name: In-Game Leader
+    description: Tactical shot caller, mid-round adaptation director, and anti-strat leader.
+    min_samples_maps: 15
+    weights:
+      cwd: 0.22
+      mra: 0.20
+      eco: 0.15
+      conv: 0.10
+      coord: 0.13
+      lrd: 0.08
+      fp: 0.07
+      con: 0.05
+    weight_presets:
+      balanced:
+        cwd: 0.22
+        mra: 0.20
+        eco: 0.15
+        conv: 0.10
+        coord: 0.13
+        lrd: 0.08
+        fp: 0.07
+        con: 0.05
+      aggressive:
+        cwd: 0.25
+        mra: 0.22
+        eco: 0.10
+        conv: 0.12
+        coord: 0.11
+        lrd: 0.08
+        fp: 0.08
+        con: 0.04
+      economy_focused:
+        cwd: 0.18
+        mra: 0.18
+        eco: 0.25
+        conv: 0.12
+        coord: 0.12
+        lrd: 0.07
+        fp: 0.04
+        con: 0.04
+      mentor:
+        cwd: 0.20
+        mra: 0.22
+        eco: 0.14
+        conv: 0.08
+        coord: 0.18
+        lrd: 0.08
+        fp: 0.04
+        con: 0.06
+
+  - id: Entry
+    name: Entry Fragger
+    description: Spearhead of offensive executions, opening site cleaner, and first contact player.
+    min_samples_maps: 15
+    weights:
+      opening_kill_rate: 0.25
+      entry_trade_rate: 0.20
+      adr: 0.18
+      multikill_rate: 0.15
+      first_bullet_acc: 0.12
+      space_creation: 0.10
+
+  - id: AWPer
+    name: Primary Sniper / AWPer
+    description: High-investment long-range anchor, opening pick threat, and defensive shutdown.
+    min_samples_maps: 15
+    weights:
+      awp_opening_kill: 0.26
+      awp_econ_efficiency: 0.20
+      multikill_share: 0.18
+      adr: 0.14
+      positioning_safety: 0.12
+      clutch_rate: 0.10
+
+  - id: Lurker
+    name: Lurker / Flanker
+    description: Information gatherer, off-angle disruptor, and rotation cutter.
+    min_samples_maps: 15
+    weights:
+      lurk_timing_success: 0.24
+      flank_kills_rate: 0.20
+      info_value: 0.18
+      clutch_conversion: 0.16
+      survival_rate: 0.12
+      adr: 0.10
+
+  - id: Support
+    name: Support / Utility Anchor
+    description: Execute flash coordinate, trade fragger, and defensive delay operator.
+    min_samples_maps: 15
+    weights:
+      flash_assist_rate: 0.25
+      trade_efficiency: 0.22
+      utility_damage: 0.18
+      kast: 0.15
+      retake_contribution: 0.10
+      adr: 0.10
+
+  - id: Rifler
+    name: Anchor / Main Rifler
+    description: Bomb-site anchor, crossfire partner, and primary damage dealer.
+    min_samples_maps: 15
+    weights:
+      site_hold_success: 0.24
+      adr: 0.20
+      multikill_rate: 0.18
+      crosshair_placement: 0.14
+      clutch_rate: 0.12
+      kast: 0.12
+
+maps_pool: [Mirage, Inferno, Nuke, Dust II, Ancient, Anubis, Vertigo]
+
+style_dimensions:
+  - aggression
+  - entry_rate
+  - risk_taking
+  - utility_reliance
+  - economy_discipline
+  - adaptability
+  - lurk_tendency
+  - comms_load
+  - clutch_reliance
+  - pool_flexibility

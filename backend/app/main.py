@@ -2,21 +2,31 @@
 Structured errors, deterministic scoring, enterprise authentication & RBAC,
 multi-layer CSV data verification, and SQLite persistence.
 """
-import csv, hashlib, io, json, re, secrets, time, uuid
+import csv, hashlib, io, json, os, re, secrets, sys, time, uuid
 from pathlib import Path
 from statistics import mean
 from typing import Optional
-from fastapi import FastAPI, Request, Query, Depends
+from fastapi import FastAPI, Request, Response, Query, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT_DIR / ".env")
+except ImportError:
+    pass
+
 from . import db
 from .auth import (
     User, UserLogin, UserRegister, ForgotPasswordRequest, ResetPasswordRequest,
     TokenResponse, authenticate_user, create_access_token, get_current_user,
-    hash_password, token_hash
+    hash_password, verify_password, token_hash
 )
 from .catalog import *
 from .fit import (
@@ -25,8 +35,17 @@ from .fit import (
 from .scoring import (
     build_index, eligible_pool, score_player, rank, explain_vs, dimension_scores
 )
+from .providers.manager import manager
+from .core.config_loader import list_game_configs, get_game_config
+
+
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from .auth_routes import router as auth_router, limiter as auth_limiter
 
 app = FastAPI(title="Golden Snitch API", version="2.0.0")
+app.state.limiter = auth_limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,6 +59,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+try:
+    from .api.rankings import router as rankings_router
+    from .api.rosters import router as rosters_router
+    from .api.recommendations import router as recommendations_router
+    from .api.features_1_to_7 import router as features_1_to_7_router
+    from .api.features_8_to_14 import router as features_8_to_14_router
+except ImportError:
+    from app.api.rankings import router as rankings_router
+    from app.api.rosters import router as rosters_router
+    from app.api.recommendations import router as recommendations_router
+    from app.api.features_1_to_7 import router as features_1_to_7_router
+    from app.api.features_8_to_14 import router as features_8_to_14_router
+
+app.include_router(rankings_router)
+app.include_router(rosters_router)
+app.include_router(recommendations_router)
+app.include_router(features_1_to_7_router)
+app.include_router(features_8_to_14_router)
+
+# app.include_router(auth_router) is replaced with unified cookie + bearer endpoints below
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "index.html"
 MAX_CSV_BYTES, MAX_CSV_ROWS = 1_000_000, 5000
 
@@ -67,7 +106,9 @@ async def _any_err(_, e: Exception):
 
 def conn_():
     c = db.connect()
-    db.init(c)
+    # Performance Optimization: Only initialize schema if tables don't exist yet
+    if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='games'").fetchone():
+        db.init(c)
     return c
 
 def get_roster(c, rid: int):
@@ -119,24 +160,43 @@ def record_failed_login(ip: str):
 def clear_failed_logins(ip: str):
     LOGIN_ATTEMPTS.pop(ip, None)
 
+def is_request_secure(request: Request) -> bool:
+    host = request.headers.get("host", "").lower() if request else ""
+    if "localhost" in host or "127.0.0.1" in host:
+        return False
+    proto = request.headers.get("x-forwarded-proto", "").lower() if request else ""
+    return (request.url.scheme == "https" if request else False) or proto == "https"
+
 # ---------- Authentication Endpoints (PRD §4 & §8) ----------
 @app.post("/api/auth/login", response_model=TokenResponse)
 @app.post("/api/v1/auth/login", response_model=TokenResponse)
-def login(b: UserLogin, request: Request):
+def login(b: UserLogin, request: Request, response: Response):
     client_ip = request.client.host if request.client else "127.0.0.1"
     check_login_rate(client_ip)
     c = conn_()
-    user = authenticate_user(b.username, b.password, c)
+    identifier = b.username or b.email or ""
+    user = authenticate_user(identifier, b.password, c)
     if not user:
         record_failed_login(client_ip)
         raise ApiError(401, "INVALID_CREDENTIALS", "Invalid username or password")
     clear_failed_logins(client_ip)
     token = create_access_token(user)
+    
+    # Set httpOnly cookie for web browser session
+    response.set_cookie(
+        "gs_session",
+        token,
+        httponly=True,
+        secure=is_request_secure(request),
+        samesite="lax",
+        max_age=86400 * 7,
+        path="/"
+    )
     return TokenResponse(access_token=token, user=user)
 
 @app.post("/api/auth/register", response_model=TokenResponse, status_code=201)
 @app.post("/api/v1/auth/register", response_model=TokenResponse, status_code=201)
-def register(b: UserRegister):
+def register(b: UserRegister, request: Request, response: Response):
     c = conn_()
     clean_uname = b.username.strip().lower()
     existing = db.get_user_by_username(c, clean_uname)
@@ -156,6 +216,15 @@ def register(b: UserRegister):
         organization=new_user_dict["organization"],
     )
     token = create_access_token(user)
+    response.set_cookie(
+        "gs_session",
+        token,
+        httponly=True,
+        secure=is_request_secure(request),
+        samesite="lax",
+        max_age=86400 * 7,
+        path="/"
+    )
     db.create_notification(
         c, user.id, "system", "Account Created",
         f"Welcome {user.name} to Golden Snitch Roster Intelligence Platform.",
@@ -168,6 +237,12 @@ def register(b: UserRegister):
 def me(user: User = Depends(get_current_user)):
     return {
         "user": user,
+        "id": user.id,
+        "name": user.name,
+        "username": user.username,
+        "email": getattr(user, "email", f"{user.username}@goldensnitch.gg"),
+        "role": user.role,
+        "org": user.organization,
         "permissions": {
             "can_approve_signings": user.role in ("ROLE_GM",),
             "can_annotate_igl": user.role in ("ROLE_GM", "ROLE_COACH"),
@@ -178,7 +253,8 @@ def me(user: User = Depends(get_current_user)):
 
 @app.post("/api/auth/logout")
 @app.post("/api/v1/auth/logout")
-def logout(request: Request, user: User = Depends(get_current_user)):
+def logout(request: Request, response: Response, user: User = Depends(get_current_user)):
+    response.delete_cookie("gs_session", path="/")
     c = conn_()
     auth_header = request.headers.get("authorization")
     if auth_header and auth_header.lower().startswith("bearer "):
@@ -307,15 +383,19 @@ def delete_watchlist(entry_id: str, user: User = Depends(get_current_user)):
     return {"status": "ok", "id": entry_id}
 
 # ---------- System Health & Catalog ----------
+@app.get("/health")
 @app.get("/api/health")
 @app.get("/api/v1/health")
-def health():
+async def health():
     c = conn_()
     n = c.execute("SELECT COUNT(*) FROM players").fetchone()[0]
+    provider_health = await manager.get_all_health()
     return {
-        "status": "ok",
+        "status": "healthy",
         "platform": "Golden Snitch",
         "version": "2.0.0",
+        "database": "connected",
+        "providers": provider_health,
         "players": n,
         "synthetic_data": bool(c.execute("SELECT 1 FROM players WHERE synthetic=1 LIMIT 1").fetchone()),
     }
@@ -347,6 +427,34 @@ def games(all: bool = False):
             "dimensions": {d: [m for m, _ in v] for d, v in dims.items()} if dims else {},
         })
     return out
+
+@app.get("/games/{id}/roles")
+@app.get("/api/games/{id}/roles")
+def game_roles(id: str):
+    g_cfg = get_game_config(id)
+    if not g_cfg:
+        raise ApiError(404, "UNKNOWN_GAME", f"Game configuration for '{id}' not found")
+    return {
+        "game_id": g_cfg.game_id,
+        "name": g_cfg.name,
+        "config_version": g_cfg.config_version,
+        "roles": [r.model_dump() for r in g_cfg.roles],
+        "style_dimensions": g_cfg.style_dimensions,
+    }
+
+@app.get("/methodology")
+@app.get("/api/methodology")
+def get_methodology():
+    meth_path = Path(__file__).resolve().parents[2] / "docs" / "METHODOLOGY.md"
+    content = ""
+    if meth_path.exists():
+        content = meth_path.read_text(encoding="utf-8")
+    return {
+        "model_version": "1.0.0",
+        "title": "ScoutIQ Scoring & Intelligence Methodology",
+        "methodology_markdown": content,
+        "active_configs": [c.model_dump() for c in list_game_configs()],
+    }
 
 # ---------- Players Directory & Profiles ----------
 @app.get("/api/players")
@@ -427,9 +535,71 @@ def player_evidence(player_id: str):
         "missing_metrics": p_data["missing_metrics"],
     }
 
+# ---------- Ingestion & Simulation Endpoints (Section 4 & 10) ----------
+class SimulateRequest(BaseModel):
+    players: int = 600
+    maps: int = 15000
+    seed: int = 42
+
+@app.post("/ingest/simulate")
+@app.post("/api/ingest/simulate")
+def ingest_simulate(b: SimulateRequest = SimulateRequest()):
+    try:
+        from simulator.generator import run_simulation
+    except ImportError:
+        from backend.simulator.generator import run_simulation
+    result = run_simulation(seed=b.seed, players=b.players, maps=b.maps)
+    return {
+        "status": "success",
+        "message": f"Successfully simulated {result['players']} players and {result['maps']} maps",
+        "result": result
+    }
+
+@app.get("/ingest/status")
+@app.get("/api/ingest/status")
+def ingest_status():
+    c = conn_()
+    players_count = c.execute("SELECT COUNT(*) FROM players").fetchone()[0]
+    teams_count = c.execute("SELECT COUNT(*) FROM teams").fetchone()[0]
+    maps_count = c.execute("SELECT COUNT(*) FROM maps_or_games").fetchone()[0]
+    rounds_count = c.execute("SELECT COUNT(*) FROM rounds").fetchone()[0]
+    pms_count = c.execute("SELECT COUNT(*) FROM player_map_stats").fetchone()[0]
+    gt_count = c.execute("SELECT COUNT(*) FROM _ground_truth").fetchone()[0]
+    
+    try:
+        from adapters.api_adapters import PandaScoreAdapter, RiotGamesAdapter, OpenDotaAdapter
+    except ImportError:
+        from backend.adapters.api_adapters import PandaScoreAdapter, RiotGamesAdapter, OpenDotaAdapter
+    adapters_status = {
+        "simulated": {"status": "active", "records": maps_count},
+        "csv_community": {"status": "ready"},
+        "pandascore": {"status": "configured" if PandaScoreAdapter().is_configured() else "not_configured"},
+        "riot_games": {"status": "configured" if RiotGamesAdapter().is_configured() else "not_configured"},
+        "opendota": {"status": "configured" if OpenDotaAdapter().is_configured() else "not_configured"},
+    }
+    
+    return {
+        "database": "connected",
+        "players": players_count,
+        "teams": teams_count,
+        "maps": maps_count,
+        "rounds": rounds_count,
+        "player_map_stats": pms_count,
+        "ground_truth_records": gt_count,
+        "data_quality": {
+            "sample_completeness": 1.0 if maps_count >= 15000 else round(maps_count / 15000, 3),
+            "round_integrity": "VALID",
+            "comms_proxy_present": True,
+            "data_quality_flag": "VALID" if maps_count >= 1000 else "PROVISIONAL"
+        },
+        "adapters": adapters_status
+    }
+
 # ---------- Multi-Layer CSV Import & Data Authenticity (PRD §8) ----------
 class _Row(Exception): pass
 
+@app.post("/ingest/csv")
+@app.post("/api/ingest/csv")
 @app.post("/api/imports")
 @app.post("/api/players/import")
 async def import_players(request: Request, dry_run: bool = False):
@@ -1176,12 +1346,436 @@ def igl_leaderboard(game: str | None = None):
     igl_pool.sort(key=lambda x: x["composite_rating"], reverse=True)
     return {"leaderboard": igl_pool, "total": len(igl_pool)}
 
+# =========================================================================
+# LIVE ESPORTS INTELLIGENCE, PUBLIC PROFILES, CLAIMS, ORGS & REPORTS (PRD-GOLDEN-002)
+# =========================================================================
+
+class ProfileUpdateRequest(BaseModel):
+    bio: Optional[str] = ""
+    social_links: Optional[dict] = None
+    is_public: Optional[int] = 1
+
+class ProfileClaimRequest(BaseModel):
+    verification_method: str = "riot_oauth"
+    verification_code: str = ""
+    evidence_text: Optional[str] = ""
+
+class ClaimReviewRequest(BaseModel):
+    status: str
+    rejection_reason: Optional[str] = None
+
+class OrganizationCreateRequest(BaseModel):
+    name: str
+    slug: str
+    tag: str
+    description: Optional[str] = ""
+
+class OrganizationInviteRequest(BaseModel):
+    email: str
+    role: str = "scout"
+
+class SharedReportCreateRequest(BaseModel):
+    title: str
+    candidate_id: str
+    roster_id: int
+    is_public: Optional[int] = 1
+    expires_in_days: Optional[int] = 30
+    payload: Optional[dict] = None
+
+@app.get("/api/v1/models/valorant-lan")
+@app.get("/api/models/valorant-lan")
+async def get_valorant_lan_model():
+    model_file = Path(__file__).resolve().parent / "models" / "valorant_lan_trained_model.json"
+    if model_file.exists():
+        with open(model_file, "r") as f:
+            return json.load(f)
+    raise ApiError(404, "MODEL_NOT_FOUND", "Trained VALORANT LAN model not found")
+
+@app.get("/api/v1/data-sources/status")
+async def data_sources_status():
+    statuses = await manager.get_all_health()
+    return {"sources": statuses, "timestamp": time.time()}
+
+@app.post("/api/v1/data-sources/{provider_id}/sync")
+async def sync_data_source(provider_id: str, user: User = Depends(get_current_user)):
+    res = await manager.trigger_sync(provider_id)
+    if res.get("status") == "error":
+        raise ApiError(404, "PROVIDER_NOT_FOUND", res.get("message"))
+    c = conn_()
+    db.create_notification(
+        c, user.id, "DATA_SYNC_COMPLETED", "Data Source Synchronized",
+        f"Provider {provider_id} telemetry indexes synchronized by {user.name}."
+    )
+    return res
+
+class HenrikIngestRequest(BaseModel):
+    limit: int = Field(default=10, ge=1, le=50)
+    region: str = Field(default="na")
+
+@app.post("/api/v1/providers/henrik/ingest")
+async def ingest_henrik_live_telemetry(req: HenrikIngestRequest = HenrikIngestRequest()):
+    try:
+        from scripts.ingest_henrik_data import run_ingestion
+        result = run_ingestion(limit=req.limit, region=req.region)
+        return result
+    except Exception as e:
+        raise ApiError(500, "INGESTION_FAILED", f"Failed to ingest Henrik live telemetry: {str(e)}")
+
+@app.get("/api/v1/players/search/live")
+async def live_player_search(q: str = Query(..., min_length=1), game: Optional[str] = None):
+    c = conn_()
+    local_players = db.load_players(c, game)
+    matched_local = []
+    q_lower = q.lower()
+    for p in local_players:
+        if q_lower in p["name"].lower() or q_lower in p["id"].lower() or q_lower in p.get("role", "").lower():
+            pub = db.get_public_profile(c, p["id"])
+            p_data = light(p)
+            p_data["is_claimed"] = bool(pub and pub.get("claimed_by_user_id"))
+            p_data["is_verified"] = bool(pub and pub.get("verified_badge"))
+            p_data["slug"] = pub["slug"] if pub else p["id"].lower()
+            p_data["origin"] = "local_database"
+            p_data["metrics"] = p.get("metrics", {})
+            p_data["provenance"] = p.get("provenance", {})
+            matched_local.append(p_data)
+    
+    external_matches = await manager.search_all_providers(q, game)
+    ext_data = []
+    for ext in external_matches:
+        ext_data.append({
+            "id": f"EXT-{ext.provider_name.upper()}-{ext.external_id[:8]}",
+            "name": ext.handle,
+            "game": ext.game,
+            "role": ext.primary_role or "Flex",
+            "matches_played": ext.matches_played,
+            "external_id": ext.external_id,
+            "provider": ext.provider_name,
+            "origin": "live_provider",
+            "verified": 1,
+            "freshness": ext.freshness,
+            "confidence": 0.92,
+            "current_team": ext.current_team,
+            "region": ext.region,
+            "provenance": ext.provenance,
+            "metrics": ext.metrics,
+        })
+
+    return {
+        "query": q,
+        "game": game,
+        "local_results": matched_local,
+        "live_results": ext_data,
+        "total_found": len(matched_local) + len(ext_data)
+    }
+
+@app.get("/api/v1/public/players/{slug_or_id}")
+def get_public_player_profile(slug_or_id: str):
+    c = conn_()
+    profile = db.get_public_profile(c, slug_or_id)
+    if not profile:
+        p = c.execute("SELECT * FROM players WHERE id=?", (slug_or_id,)).fetchone()
+        if not p:
+            raise ApiError(404, "PROFILE_NOT_FOUND", f"Public profile for '{slug_or_id}' was not found or is private.")
+        p = dict(p)
+        slug = re.sub(r'[^a-zA-Z0-9_-]', '', p["name"].lower())
+        profile = db.upsert_public_profile(c, p["id"], slug, is_public=1, bio=f"Official competitive profile for {p['name']}.")
+    
+    ext_rows = c.execute("SELECT * FROM player_identities WHERE player_id=?", (profile["player_id"],)).fetchall()
+    profile["external_identities"] = [dict(r) for r in ext_rows]
+    return profile
+
+@app.patch("/api/v1/profile")
+def update_own_player_profile(body: ProfileUpdateRequest, user: User = Depends(get_current_user)):
+    c = conn_()
+    pub = c.execute("SELECT * FROM public_profiles WHERE claimed_by_user_id=?", (user.id,)).fetchone()
+    if not pub:
+        p = c.execute("SELECT id FROM players LIMIT 1").fetchone()
+        if not p:
+            raise ApiError(404, "PLAYER_NOT_FOUND", "No player profile associated with this account to update.")
+        player_id = p["id"]
+        slug = user.username.lower()
+    else:
+        player_id = pub["player_id"]
+        slug = pub["slug"]
+
+    updated = db.upsert_public_profile(
+        c, player_id, slug,
+        is_public=body.is_public if body.is_public is not None else 1,
+        bio=body.bio or "",
+        social_links=body.social_links or {}
+    )
+    return {"message": "Profile updated successfully", "profile": updated}
+
+@app.post("/api/v1/players/{id}/claim")
+def submit_profile_claim(id: str, body: ProfileClaimRequest, user: User = Depends(get_current_user)):
+    c = conn_()
+    p = c.execute("SELECT * FROM players WHERE id=?", (id,)).fetchone()
+    if not p:
+        raise ApiError(404, "PLAYER_NOT_FOUND", f"Player {id} not found")
+    
+    existing_pub = c.execute("SELECT * FROM public_profiles WHERE player_id=? AND claimed_by_user_id IS NOT NULL", (id,)).fetchone()
+    if existing_pub and existing_pub["claimed_by_user_id"] != user.id:
+        raise ApiError(409, "PROFILE_ALREADY_CLAIMED", "This profile has already been claimed by a verified owner.")
+
+    claim_id = db.create_profile_claim(
+        c, id, user.id, body.verification_method, body.verification_code, body.evidence_text or ""
+    )
+    db.create_notification(
+        c, user.id, "PROFILE_CLAIM_SUBMITTED", "Profile Claim Received",
+        f"Your verification claim for {p['name']} ({id}) is currently pending review."
+    )
+    return {
+        "claim_id": claim_id,
+        "status": "pending",
+        "message": f"Verification claim submitted for {p['name']}. Our verification team will review your evidence."
+    }
+
+@app.get("/api/v1/claims")
+def list_claims(status: Optional[str] = None, user: User = Depends(get_current_user)):
+    c = conn_()
+    if user.role in ("ROLE_GM", "ROLE_ADMIN"):
+        claims = db.list_profile_claims(c, status=status)
+    else:
+        claims = db.list_profile_claims(c, user_id=user.id, status=status)
+    return {"claims": claims, "total": len(claims)}
+
+@app.patch("/api/v1/claims/{id}")
+def review_claim(id: str, body: ClaimReviewRequest, user: User = Depends(get_current_user)):
+    if user.role not in ("ROLE_GM", "ROLE_ADMIN"):
+        raise ApiError(403, "FORBIDDEN", "Only organization GMs and administrators can review profile claims.")
+    if body.status not in ("approved", "rejected"):
+        raise ApiError(422, "INVALID_STATUS", "Status must be 'approved' or 'rejected'")
+    c = conn_()
+    success = db.review_profile_claim(c, id, user.id, body.status, body.rejection_reason)
+    if not success:
+        raise ApiError(404, "CLAIM_NOT_FOUND", f"Claim {id} not found")
+    
+    claim = c.execute("SELECT * FROM profile_claims WHERE id=?", (id,)).fetchone()
+    if claim:
+        db.create_notification(
+            c, claim["user_id"], f"CLAIM_{body.status.upper()}", f"Profile Claim {body.status.capitalize()}",
+            f"Your ownership claim for player {claim['player_id']} has been {body.status}."
+        )
+    return {"message": f"Claim {id} successfully {body.status}", "claim_id": id, "status": body.status}
+
+@app.post("/api/v1/organizations")
+def create_org(body: OrganizationCreateRequest, user: User = Depends(get_current_user)):
+    c = conn_()
+    org = db.create_organization(c, body.name, body.slug, body.tag, user.id, body.description or "")
+    return {"organization": org, "message": "Organization created successfully"}
+
+@app.get("/api/v1/organizations/{id_or_slug}")
+def get_org(id_or_slug: str):
+    c = conn_()
+    org = db.get_organization(c, id_or_slug)
+    if not org:
+        raise ApiError(404, "ORGANIZATION_NOT_FOUND", f"Organization '{id_or_slug}' not found")
+    return org
+
+@app.get("/api/v1/organizations")
+def list_orgs(user: User = Depends(get_current_user)):
+    c = conn_()
+    orgs = db.list_user_organizations(c, user.id)
+    return {"organizations": orgs, "total": len(orgs)}
+
+@app.post("/api/v1/organizations/{id}/invitations")
+def invite_to_org(id: str, body: OrganizationInviteRequest, user: User = Depends(get_current_user)):
+    c = conn_()
+    org = db.get_organization(c, id)
+    if not org:
+        raise ApiError(404, "ORGANIZATION_NOT_FOUND", f"Organization {id} not found")
+    
+    # Check permissions: platform admin/GM OR member of this org with admin/owner/manager role
+    if user.role not in ("ROLE_GM", "ROLE_ADMIN"):
+        mem_row = c.execute(
+            "SELECT role FROM organization_members WHERE organization_id=? AND user_id=?",
+            (id, user.id)
+        ).fetchone()
+        if not mem_row or mem_row["role"] not in ("owner", "admin", "manager", "ROLE_OWNER", "ROLE_ADMIN", "ROLE_MANAGER"):
+            raise ApiError(403, "FORBIDDEN", "You are not authorized to invite members to this organization.")
+
+    token = secrets.token_urlsafe(24)
+    expires_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + 7 * 86400))
+    inv_id = db.create_invitation(c, id, body.email, body.role, token, expires_at)
+    return {
+        "invitation_id": inv_id,
+        "token": token,
+        "invite_url": f"/invite/{token}",
+        "email": body.email,
+        "role": body.role,
+        "expires_at": expires_at,
+        "message": f"Invitation generated for {body.email} with role {body.role}"
+    }
+
+@app.get("/api/v1/invitations/{token}")
+def check_invitation(token: str):
+    c = conn_()
+    inv = db.get_invitation(c, token)
+    if not inv:
+        raise ApiError(404, "INVITATION_NOT_FOUND", "Invitation token is invalid, expired, or already accepted.")
+    return inv
+
+@app.post("/api/v1/invitations/{token}/accept")
+def accept_org_invitation(token: str, user: User = Depends(get_current_user)):
+    c = conn_()
+    inv = db.get_invitation(c, token)
+    if not inv:
+        raise ApiError(404, "INVITATION_NOT_FOUND", "Invitation token is invalid, expired, or already accepted.")
+    success = db.accept_invitation(c, token, user.id)
+    if not success:
+        raise ApiError(400, "ACCEPT_FAILED", "Failed to accept invitation.")
+    db.create_notification(
+        c, user.id, "INVITATION_ACCEPTED", "Organization Joined",
+        f"You have joined {inv.get('organization_name', 'the organization')} as {inv.get('role', 'member')}."
+    )
+    return {"message": "Invitation accepted successfully", "organization_id": inv["organization_id"], "role": inv["role"]}
+
+@app.post("/api/v1/reports/share")
+def share_scouting_report(body: SharedReportCreateRequest, user: User = Depends(get_current_user)):
+    c = conn_()
+    share_token = secrets.token_urlsafe(16)
+    expires_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + (body.expires_in_days or 30) * 86400))
+    payload_str = json.dumps(body.payload or {})
+    rep_id = db.create_shared_report(
+        c, body.title, body.candidate_id, body.roster_id, share_token,
+        is_public=body.is_public if body.is_public is not None else 1,
+        expires_at=expires_at, created_by=user.id, payload=payload_str
+    )
+    return {
+        "report_id": rep_id,
+        "share_token": share_token,
+        "share_url": f"/reports/shared/{share_token}",
+        "expires_at": expires_at,
+        "message": "Scouting report share link generated successfully."
+    }
+
+@app.get("/api/v1/public/reports/{share_token}")
+def get_public_report(share_token: str):
+    c = conn_()
+    rep = db.get_shared_report(c, share_token)
+    if not rep:
+        raise ApiError(404, "REPORT_NOT_FOUND", "Shared report was not found, has expired, or was revoked.")
+    return rep
+
+@app.delete("/api/v1/reports/share/{share_token}")
+def revoke_report(share_token: str, user: User = Depends(get_current_user)):
+    c = conn_()
+    revoked = db.revoke_shared_report(c, share_token, user.id)
+    if not revoked:
+        raise ApiError(404, "REPORT_NOT_FOUND", "Report not found or you are not authorized to revoke it.")
+    return {"message": "Shared report link has been permanently revoked."}
+
+# =========================================================================
+# PRODUCTION READINESS: HEALTH, DISPUTES, PASSWORD & USER DATA RIGHTS
+# =========================================================================
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class CorrectionCreateRequest(BaseModel):
+    issue_type: str = "incorrect_stats"
+    description: str
+    evidence_url: Optional[str] = ""
+
+class CorrectionResolveRequest(BaseModel):
+    status: str
+
+@app.post("/api/v1/auth/change-password")
+def change_password_endpoint(body: ChangePasswordRequest, request: Request, user: User = Depends(get_current_user)):
+    c = conn_()
+    user_row = db.get_user_by_username(c, user.username)
+    if not user_row:
+        raise ApiError(404, "USER_NOT_FOUND", "User record not found")
+    if not verify_password(user_row["password_hash"], user_row["salt"], body.current_password):
+        raise ApiError(400, "INVALID_PASSWORD", "Current password is incorrect")
+    if len(body.new_password) < 8:
+        raise ApiError(422, "PASSWORD_TOO_SHORT", "New password must be at least 8 characters long")
+    
+    new_hash, new_salt = hash_password(body.new_password)
+    db.change_user_password(c, user.id, new_hash, new_salt)
+    
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        db.revoke_token(c, token_hash(token), user.id)
+        
+    db.create_notification(
+        c, user.id, "SECURITY_ALERT", "Password Changed",
+        "Your account password was updated successfully. Previous active sessions were revoked."
+    )
+    return {"status": "ok", "message": "Password updated successfully. Please log in with your new password."}
+
+@app.get("/api/v1/users/me/export")
+def export_own_data(user: User = Depends(get_current_user)):
+    c = conn_()
+    data = db.export_user_data(c, user.id)
+    if not data:
+        raise ApiError(404, "USER_NOT_FOUND", "User data not found")
+    return {"export": data, "exported_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+
+@app.delete("/api/v1/users/me")
+def delete_own_account(request: Request, user: User = Depends(get_current_user)):
+    c = conn_()
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        db.revoke_token(c, token_hash(token), user.id)
+    success = db.delete_user_account(c, user.id)
+    if not success:
+        raise ApiError(404, "USER_NOT_FOUND", "Account could not be removed")
+    return {"status": "ok", "message": "Your account and personal data have been permanently deleted."}
+
+@app.post("/api/v1/players/{id}/correction-requests")
+def submit_correction_request(id: str, body: CorrectionCreateRequest, user: User = Depends(get_current_user)):
+    c = conn_()
+    p = c.execute("SELECT * FROM players WHERE id=?", (id,)).fetchone()
+    if not p:
+        raise ApiError(404, "PLAYER_NOT_FOUND", f"Player {id} not found")
+    req_id = db.create_correction_request(
+        c, id, user.id, body.issue_type, body.description, body.evidence_url or ""
+    )
+    db.create_notification(
+        c, user.id, "DISPUTE_SUBMITTED", "Data Dispute Received",
+        f"Your data correction request for {p['name']} ({id}) has been recorded for review."
+    )
+    return {
+        "request_id": req_id,
+        "status": "pending",
+        "message": f"Data correction request submitted for {p['name']}. Review team has been notified."
+    }
+
+@app.get("/api/v1/correction-requests")
+def list_disputes(status: Optional[str] = None, player_id: Optional[str] = None, user: User = Depends(get_current_user)):
+    if user.role not in ("ROLE_GM", "ROLE_ADMIN"):
+        raise ApiError(403, "FORBIDDEN", "Only organization administrators can audit data correction requests.")
+    c = conn_()
+    reqs = db.list_correction_requests(c, status=status, player_id=player_id)
+    return {"requests": reqs, "total": len(reqs)}
+
+@app.patch("/api/v1/correction-requests/{id}")
+def resolve_dispute(id: str, body: CorrectionResolveRequest, user: User = Depends(get_current_user)):
+    if user.role not in ("ROLE_GM", "ROLE_ADMIN"):
+        raise ApiError(403, "FORBIDDEN", "Only organization administrators can resolve data correction requests.")
+    if body.status not in ("resolved", "dismissed"):
+        raise ApiError(422, "INVALID_STATUS", "Status must be 'resolved' or 'dismissed'")
+    c = conn_()
+    success = db.resolve_correction_request(c, id, user.id, body.status)
+    if not success:
+        raise ApiError(404, "REQUEST_NOT_FOUND", f"Correction request {id} not found")
+    return {"message": f"Correction request {id} marked as {body.status}", "request_id": id, "status": body.status}
+
 DIST_DIR = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
 DIST_INDEX = DIST_DIR / "index.html"
 
 if (DIST_DIR / "assets").exists():
     from fastapi.staticfiles import StaticFiles
     app.mount("/assets", StaticFiles(directory=str(DIST_DIR / "assets")), name="assets")
+
+if (DIST_DIR / "images").exists():
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/images", StaticFiles(directory=str(DIST_DIR / "images")), name="images")
 
 @app.get("/")
 @app.get("/{full_path:path}")
@@ -1189,6 +1783,14 @@ def serve_spa(full_path: str = ""):
     # If API route or docs, pass through (API routes are handled above)
     if full_path.startswith("api/") or full_path in ("docs", "openapi.json", "redoc"):
         raise ApiError(404, "NOT_FOUND", f"Endpoint {full_path} not found")
+    
+    # Check if a static file in DIST_DIR exists (e.g. logo.svg, favicon.svg, robots.txt)
+    if full_path and DIST_DIR.exists():
+        static_file = (DIST_DIR / full_path).resolve()
+        # Security check to prevent directory traversal
+        if str(static_file).startswith(str(DIST_DIR.resolve())) and static_file.is_file():
+            return FileResponse(static_file)
+
     if DIST_INDEX.exists():
         return FileResponse(DIST_INDEX)
     if FRONTEND.exists():

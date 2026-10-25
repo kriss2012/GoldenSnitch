@@ -66,6 +66,31 @@ def test_auth_logout_and_revocation():
     r_me2 = client.get("/api/v1/auth/me", headers=headers)
     assert r_me2.status_code == 401
 
+def test_cookie_session_persistence_and_logout():
+    """Verify session cookie persistence without Authorization header and clean logout."""
+    session_client = TestClient(app)
+    r_login = session_client.post("/api/auth/login", json={"username": "maya", "password": "admin123"})
+    assert r_login.status_code == 200
+    assert "gs_session" in session_client.cookies
+    assert "access_token" in r_login.json()
+
+    # 2. Check /api/auth/me WITHOUT Authorization header (pure cookie session)
+    r_me = session_client.get("/api/auth/me")
+    assert r_me.status_code == 200
+    me_data = r_me.json()
+    assert me_data["username"] == "maya"
+    assert me_data["role"] == "ROLE_GM"
+    assert me_data["permissions"]["can_approve_signings"] is True
+
+    # 3. Calling /api/auth/logout clears the session cookie
+    r_logout = session_client.post("/api/auth/logout")
+    assert r_logout.status_code == 200
+
+    # 4. Subsequent call to /api/auth/me returns 401 Unauthorized
+    r_me_after = session_client.get("/api/auth/me")
+    assert r_me_after.status_code == 401
+    assert r_me_after.json()["detail"] == "Authentication credentials were not provided"
+
 def test_password_reset_flow():
     # 1. Request reset
     r_forgot = client.post("/api/v1/auth/forgot-password", json={"username_or_email": "arjun"})
@@ -95,8 +120,9 @@ def test_notification_lifecycle_and_read_state():
     token = r_login.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # Ensure an unread notification exists for this test run
-    client.post("/api/v1/watchlist", json={"player_id": "TAC-001", "stage": "Screening"}, headers=headers)
+    # Ensure an unread notification exists for this test run (Mirage)
+    res_post = client.post("/api/v1/watchlist", json={"player_id": "VAL-002", "stage": "Screening"}, headers=headers)
+    assert res_post.status_code == 200
 
     # 1. Fetch unread count
     r_count = client.get("/api/v1/notifications/unread-count", headers=headers)

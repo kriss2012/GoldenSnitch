@@ -486,7 +486,29 @@ def seed(conn, reset=True):
     conn.execute("INSERT OR REPLACE INTO roster_members VALUES(5, 'CS-006', 'Lurker')")
     conn.execute("INSERT OR REPLACE INTO vacancies(id, roster_id, role, priority, status) VALUES(8, 5, 'Entry Fragger', 'high', 'open')")
 
+    # 8. Seed public profiles and external identities for verified players
+    public_seeds = [
+        ("PUB-001", "VAL-002", "mirage", 1, "Elite VCT Controller & Certified In-Game Leader. Proven smoke timings and high mid-round tactical adaptability.", json.dumps({"twitter": "@mirage_val", "tracker": "mirage#VCT"}), 1),
+        ("PUB-002", "VAL-003", "voltz", 1, "High combat impact entry & controller hybrid. Frag specialist with aggressive first-contact dueling.", json.dumps({"twitter": "@voltz_fps", "tracker": "voltz#NA1"}), 0),
+        ("PUB-003", "VAL-001", "tenz", 1, "World champion VCT Americas Duelist. Elite mechanical precision and fast rotation anchoring.", json.dumps({"twitter": "@tenzofficial", "twitch": "tenz"}), 1),
+    ]
+    conn.executemany(
+        "INSERT OR REPLACE INTO public_profiles(id, player_id, slug, is_public, bio, social_links, verified_badge) VALUES(?,?,?,?,?,?,?)",
+        public_seeds
+    )
+
+    identities = [
+        ("IDN-001", "VAL-002", "henrik_valorant", "riot_puuid_mirage_sentinels_002", "Mirage#VCT", 1, "current"),
+        ("IDN-002", "VAL-003", "henrik_valorant", "riot_puuid_voltz_na1_003", "Voltz#NA1", 0, "current"),
+        ("IDN-003", "VAL-001", "henrik_valorant", "riot_puuid_tenz_sentinels_001", "TenZ#NA1", 1, "current"),
+    ]
+    conn.executemany(
+        "INSERT OR REPLACE INTO player_identities(id, player_id, provider_name, external_id, handle_at_source, verified, freshness_status) VALUES(?,?,?,?,?,?,?)",
+        identities
+    )
+
     conn.commit()
+
 
 
 if __name__ == "__main__":

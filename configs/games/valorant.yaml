@@ -1,0 +1,137 @@
+game_id: valorant
+name: Valorant
+config_version: "1.0.0"
+data_type: round_based
+default_roster_size: 5
+peak_age_range: [20, 25]
+
+roles:
+  - id: IGL
+    name: In-Game Leader
+    description: Primary tactical caller, macro strategist, and adaptation leader.
+    min_samples_maps: 15
+    weights:
+      cwd: 0.22
+      mra: 0.20
+      eco: 0.15
+      conv: 0.10
+      coord: 0.13
+      lrd: 0.08
+      fp: 0.07
+      con: 0.05
+    weight_presets:
+      balanced:
+        cwd: 0.22
+        mra: 0.20
+        eco: 0.15
+        conv: 0.10
+        coord: 0.13
+        lrd: 0.08
+        fp: 0.07
+        con: 0.05
+      aggressive:
+        cwd: 0.25
+        mra: 0.22
+        eco: 0.10
+        conv: 0.12
+        coord: 0.11
+        lrd: 0.08
+        fp: 0.08
+        con: 0.04
+      economy_focused:
+        cwd: 0.18
+        mra: 0.18
+        eco: 0.25
+        conv: 0.12
+        coord: 0.12
+        lrd: 0.07
+        fp: 0.04
+        con: 0.04
+      mentor:
+        cwd: 0.20
+        mra: 0.22
+        eco: 0.14
+        conv: 0.08
+        coord: 0.18
+        lrd: 0.08
+        fp: 0.04
+        con: 0.06
+
+  - id: Duelist
+    name: Duelist / Entry Fragger
+    description: Primary entry fragger, first engagement initiator, and space creator.
+    min_samples_maps: 15
+    weights:
+      opening_success: 0.25
+      opening_impact: 0.20
+      adr: 0.18
+      kast: 0.12
+      multikill_rate: 0.10
+      entry_trade_backup: 0.08
+      pool_breadth: 0.07
+
+  - id: Initiator
+    name: Initiator
+    description: Reconnaissance specialist, flash creator, and execute facilitator.
+    min_samples_maps: 15
+    weights:
+      recon_efficiency: 0.24
+      assist_rate: 0.20
+      flash_impact: 0.18
+      trade_frequency: 0.15
+      adr: 0.13
+      kast: 0.10
+
+  - id: Controller
+    name: Controller / Smoker
+    description: Vision blocker, territory denial specialist, and post-plant anchor.
+    min_samples_maps: 15
+    weights:
+      smoke_efficiency: 0.25
+      site_delay_s: 0.20
+      clutch_rate: 0.18
+      kast: 0.15
+      adr: 0.12
+      survival_rate: 0.10
+
+  - id: Sentinel
+    name: Sentinel / Anchor
+    description: Defensive site anchor, flank watcher, and information gatherer.
+    min_samples_maps: 15
+    weights:
+      utility_value: 0.24
+      site_hold_success: 0.22
+      retake_contribution: 0.18
+      clutch_conversion: 0.16
+      trade_efficiency: 0.10
+      kast: 0.10
+
+  - id: Flex
+    name: Flex / Sixth Man
+    description: Multi-role capable operator adept at secondary calling and role adaptation.
+    min_samples_maps: 15
+    weights:
+      pool_flexibility: 0.25
+      kast: 0.20
+      adr: 0.18
+      trade_efficiency: 0.15
+      clutch_conversion: 0.12
+      utility_value: 0.10
+
+agent_pool:
+  Duelist: [Jett, Raze, Reyna, Phoenix, Yoru, Neon, Iso]
+  Initiator: [Sova, Fade, Breach, Skye, KAY/O, Gekko]
+  Controller: [Omen, Brimstone, Viper, Astra, Harbor, Clove]
+  Sentinel: [Killjoy, Cypher, Sage, Chamber, Deadlock, Vyse]
+
+style_dimensions:
+  - aggression
+  - entry_rate
+  - risk_taking
+  - utility_reliance
+  - economy_discipline
+  - adaptability
+  - lurk_tendency
+  - comms_load
+  - clutch_reliance
+  - pool_flexibility

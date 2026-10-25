@@ -17,9 +17,9 @@ export const TalentBadge: React.FC<TalentBadgeProps> = ({
   const { bg, text, label } = getTalentBadgeClasses(score);
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5 min-w-[36px]',
-    md: 'text-sm px-2.5 py-1 min-w-[44px]',
-    lg: 'text-base px-3.5 py-1.5 min-w-[56px] font-bold',
+    sm: 'text-xs px-2.5 py-0.5 min-w-[38px] font-bold',
+    md: 'text-sm px-3.5 py-0.5 min-w-[54px] font-black',
+    lg: 'text-base px-4 py-1.5 min-w-[64px] font-black',
   };
 
   return (
@@ -32,3 +32,5 @@ export const TalentBadge: React.FC<TalentBadgeProps> = ({
     </span>
   );
 };
+
+export default TalentBadge;

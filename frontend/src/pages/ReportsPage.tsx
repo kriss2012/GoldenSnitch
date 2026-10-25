@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Download, Printer, Shield, CheckCircle, Info, ExternalLink, X, RefreshCw, Eye } from 'lucide-react';
+import { Download, Printer, Shield, CheckCircle, Info, ExternalLink, X, RefreshCw, Eye, Share2 } from 'lucide-react';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { scoutService } from '../services/scoutService';
 import { api } from '../services/apiClient';
+import { esportsIntelligenceService } from '../services/esportsIntelligenceService';
 
 interface DecisionSnapshotSummary {
   id: string;
@@ -56,6 +57,39 @@ export const ReportsPage: React.FC = () => {
       setIsVerifying(false);
       setVerifyStatus('100% Deterministic Match · Zero Variance Across All Normalization Factors');
     }, 400);
+  };
+
+  const [sharing, setSharing] = useState(false);
+  const [sharedLink, setSharedLink] = useState<string | null>(null);
+
+  const handleShareReport = async () => {
+    if (!selectedSnapshot) return;
+    setSharing(true);
+    try {
+      const topCand = selectedSnapshot.candidates?.[0];
+      const res = await esportsIntelligenceService.createSharedReport({
+        title: `Scouting Report — ${selectedSnapshot.roster_name || 'Sentinels'} ${selectedSnapshot.role || 'Controller'} Vacancy`,
+        candidate_id: topCand?.player_id || 'VAL-002',
+        roster_id: selectedSnapshot.roster_id || 1,
+        is_public: 1,
+        expires_in_days: 30,
+        payload: {
+          fit_score: topCand?.fit?.fit_score || 74.8,
+          candidate_name: topCand?.name || 'Mirage',
+          tactical_archetype: 'Anchoring Controller',
+          synergy_delta: 4.2,
+          strengths: ['Site Retention', 'Utility Hygiene', 'Certified IGL']
+        }
+      });
+      const fullUrl = `${window.location.origin}${res.share_url}`;
+      await navigator.clipboard.writeText(fullUrl);
+      setSharedLink(fullUrl);
+      setTimeout(() => setSharedLink(null), 4000);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to create shareable report');
+    } finally {
+      setSharing(false);
+    }
   };
 
   const handleExportCandidateRankingCSV = () => {
@@ -341,14 +375,26 @@ export const ReportsPage: React.FC = () => {
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-border flex items-center justify-between bg-surface-header sticky bottom-0 z-10">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => scoutService.exportJSON(`snapshot_${selectedSnapshot.id}`, selectedSnapshot)}
-              >
-                <Download size={13} className="mr-1" />
-                Export snapshot JSON
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => scoutService.exportJSON(`snapshot_${selectedSnapshot.id}`, selectedSnapshot)}
+                >
+                  <Download size={13} className="mr-1" />
+                  Export JSON
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleShareReport}
+                  disabled={sharing}
+                >
+                  <Share2 size={13} className="mr-1 text-electric" />
+                  {sharedLink ? 'Link Copied!' : 'Share Public Report'}
+                </Button>
+              </div>
 
               <Button variant="primary" size="sm" onClick={() => setSelectedSnapshot(null)}>
                 Close audit

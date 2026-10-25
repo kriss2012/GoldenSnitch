@@ -1,0 +1,91 @@
+game_id: dota2
+name: Dota 2
+config_version: "1.0.0"
+data_type: event_based
+default_roster_size: 5
+peak_age_range: [20, 26]
+
+roles:
+  - id: Carry
+    name: Position 1 — Hard Carry
+    description: Primary late-game farm priority, building siege, and core teamfight carry.
+    min_samples_maps: 15
+    is_shotcaller_eligible: false
+    weights:
+      net_worth_efficiency: 0.25
+      damage_per_min: 0.22
+      last_hits_10: 0.18
+      objective_damage: 0.15
+      teamfight_survival: 0.10
+      fight_participation: 0.10
+
+  - id: Mid
+    name: Position 2 — Solo Mid
+    description: Tempo orchestrator, level-advantage pressure, and active map playmaker.
+    min_samples_maps: 15
+    is_shotcaller_eligible: false
+    weights:
+      lane_dominance_xp: 0.24
+      damage_per_min: 0.22
+      rotation_gank_success: 0.18
+      rune_control_rate: 0.14
+      fight_participation: 0.12
+      net_worth_efficiency: 0.10
+
+  - id: Offlane
+    name: Position 3 — Offlaner
+    description: Frontline initiator, space creator, aura carrier, and opponent farm disruptor.
+    min_samples_maps: 15
+    is_shotcaller_eligible: false
+    weights:
+      initiation_success: 0.24
+      damage_absorbed_per_death: 0.20
+      space_created_score: 0.18
+      item_timing_delta: 0.15
+      fight_participation: 0.13
+      lane_outcome: 0.10
+
+  - id: SoftSupport
+    name: Position 4 — Soft Support
+    description: Early ganker, jungle stacker, teamfight crowd controller, and secondary initiator.
+    min_samples_maps: 15
+    is_shotcaller_eligible: true
+    weights:
+      roam_kill_involvement: 0.24
+      fight_participation: 0.20
+      stack_count_per_game: 0.18
+      vision_control: 0.15
+      draft_win_delta: 0.12
+      item_impact: 0.11
+
+  - id: HardSupport
+    name: Position 5 — Hard Support / Captain
+    description: Vision commander, draft captain, tactical shot caller, and lane sacrifice anchor.
+    min_samples_maps: 15
+    is_shotcaller_eligible: true
+    weights:
+      draft_win_delta: 0.25
+      vision_control: 0.22
+      macro_rotation_calls: 0.18
+      fight_save_saves: 0.15
+      stack_pull_rate: 0.10
+      death_economy_efficiency: 0.10
+
+hero_pools:
+  Carry: [Anti-Mage, Faceless Void, Morphling, Juggernaut, Terrorblade, Phantom Assassin]
+  Mid: [Invoker, Storm Spirit, Ember Spirit, Puck, Queen of Pain, Shadow Fiend]
+  Offlane: [Centaur Warrunner, Axe, Mars, Tidehunter, Magnus, Beastmaster]
+  SoftSupport: [Rubick, Earthshaker, Mirana, Tusk, Tiny, Hoodwink]
+  HardSupport: [Chen, Crystal Maiden, Disruptor, Bane, Dazzle, Shadow Demon]
+
+style_dimensions:
+  - aggression
+  - entry_rate
+  - risk_taking
+  - utility_reliance
+  - economy_discipline
+  - adaptability
+  - lurk_tendency
+  - comms_load
+  - clutch_reliance
+  - pool_flexibility

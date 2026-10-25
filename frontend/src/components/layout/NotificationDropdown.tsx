@@ -43,8 +43,9 @@ export const NotificationDropdown: React.FC = () => {
 
   useEffect(() => {
     fetchNotifs();
-    // Poll unread count periodically every 30 seconds
+    // Poll unread count periodically every 30 seconds only if authenticated
     const interval = setInterval(async () => {
+      if (!localStorage.getItem('gs_token')) return;
       try {
         const count = await notificationService.getUnreadCount();
         setUnreadCount(count);
@@ -157,13 +158,13 @@ export const NotificationDropdown: React.FC = () => {
       {/* Bell Button */}
       <button
         onClick={handleToggle}
-        className="w-9 h-9 flex items-center justify-center text-text-muted hover:text-text rounded-control border border-border hover:border-violet/40 hover:bg-surface/60 transition-all relative focus-visible:outline-lilac"
+        className="w-9 h-9 flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-full border border-[#353535] bg-[#242424] hover:border-[#82EAF4]/50 transition-all relative focus-visible:outline-[#82EAF4]"
         aria-label={`Notifications (${unreadCount} unread)`}
         aria-expanded={isOpen}
       >
-        <Bell size={18} />
+        <Bell size={16} />
         {unreadCount > 0 && (
-          <span className="min-w-[18px] h-[18px] px-1 bg-violet text-white text-[10px] font-extrabold font-mono rounded-full flex items-center justify-center absolute -top-1 -right-1 shadow-[0_0_10px_rgba(155,48,255,0.7)] animate-pulse">
+          <span className="min-w-[17px] h-[17px] px-1 bg-[#82EAF4] text-[#0B0B0B] text-[10px] font-extrabold font-mono rounded-full flex items-center justify-center absolute -top-1 -right-1 shadow-[0_0_10px_rgba(130,234,244,0.7)] animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -171,13 +172,13 @@ export const NotificationDropdown: React.FC = () => {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-1rem)] sm:w-96 max-w-[420px] bg-surface/95 backdrop-blur-md border border-border shadow-[0_8px_32px_rgba(0,0,0,0.8)] rounded-panel z-50 overflow-hidden flex flex-col text-xs">
+        <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-1rem)] sm:w-96 max-w-[420px] bg-[#242424] border border-[#353535] shadow-2xl rounded-2xl z-50 overflow-hidden flex flex-col text-xs">
           {/* Header */}
-          <div className="p-3.5 border-b border-border flex items-center justify-between bg-surface">
+          <div className="p-3.5 border-b border-[#353535] flex items-center justify-between bg-[#101010]">
             <div className="flex items-center gap-2">
-              <span className="font-heading font-bold text-text text-sm">Notifications</span>
+              <span className="font-heading font-bold text-[#F5F5F5] text-sm">Notifications</span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-violet/20 text-lilac border border-violet/40">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[#82EAF4]/15 text-[#82EAF4] border border-[#82EAF4]/40">
                   {unreadCount} unread
                 </span>
               )}
@@ -187,14 +188,14 @@ export const NotificationDropdown: React.FC = () => {
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
-                  className="px-2 py-1 text-[11px] font-medium text-lilac hover:text-white hover:bg-violet/20 rounded transition-colors"
+                  className="px-2 py-1 text-[11px] font-medium text-[#82EAF4] hover:underline transition-colors"
                 >
                   Mark all read
                 </button>
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 text-text-muted hover:text-text rounded"
+                className="p-1 text-[#B8B8B8] hover:text-[#F5F5F5] rounded-lg"
                 aria-label="Close notifications"
               >
                 <X size={15} />
@@ -203,27 +204,27 @@ export const NotificationDropdown: React.FC = () => {
           </div>
 
           {/* Body */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-border/40">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#353535]/50">
             {isLoading ? (
-              <div className="py-12 flex flex-col items-center justify-center gap-2 text-text-muted">
-                <Loader2 size={24} className="animate-spin text-violet" />
+              <div className="py-12 flex flex-col items-center justify-center gap-2 text-[#B8B8B8]">
+                <Loader2 size={24} className="animate-spin text-[#82EAF4]" />
                 <span>Loading notifications...</span>
               </div>
             ) : error ? (
-              <div className="py-8 px-4 text-center text-danger">
+              <div className="py-8 px-4 text-center text-red-400">
                 <p className="font-medium">{error}</p>
                 <button
                   onClick={fetchNotifs}
-                  className="mt-2 text-xs text-lilac hover:underline"
+                  className="mt-2 text-xs text-[#82EAF4] hover:underline"
                 >
                   Try again
                 </button>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="py-12 px-4 text-center text-text-muted">
+              <div className="py-12 px-4 text-center text-[#B8B8B8]">
                 <Bell size={28} className="mx-auto mb-2 opacity-30" />
-                <p className="font-medium text-text">All caught up</p>
-                <p className="text-[11px] mt-0.5 opacity-80">
+                <p className="font-medium text-[#F5F5F5]">All caught up</p>
+                <p className="text-[11px] mt-0.5 text-[#777777]">
                   No notifications to review at this time.
                 </p>
               </div>
@@ -236,11 +237,11 @@ export const NotificationDropdown: React.FC = () => {
                     onClick={() => handleNotificationClick(n)}
                     className={`p-3.5 flex items-start gap-3 transition-colors cursor-pointer group ${
                       isUnread
-                        ? 'bg-plum/30 hover:bg-plum/50 border-l-2 border-l-violet'
-                        : 'hover:bg-surface-raised/60'
+                        ? 'bg-[#2B2B2B] hover:bg-[#353535]/70 border-l-2 border-l-[#82EAF4]'
+                        : 'hover:bg-[#2B2B2B]/60'
                     }`}
                   >
-                    <div className="p-2 rounded-control bg-void/80 border border-border shrink-0 mt-0.5">
+                    <div className="p-2 rounded-xl bg-[#1A1A1A] border border-[#353535] shrink-0 mt-0.5 text-[#82EAF4]">
                       {getIcon(n.type)}
                     </div>
 
@@ -248,29 +249,29 @@ export const NotificationDropdown: React.FC = () => {
                       <div className="flex items-center justify-between gap-2">
                         <h4
                           className={`font-heading text-xs truncate ${
-                            isUnread ? 'font-bold text-text' : 'font-medium text-text/80'
+                            isUnread ? 'font-bold text-[#F5F5F5]' : 'font-medium text-[#B8B8B8]'
                           }`}
                         >
                           {n.title}
                         </h4>
-                        <span className="text-[10px] text-text-muted shrink-0 font-mono">
+                        <span className="text-[10px] text-[#788B8D] shrink-0 font-mono">
                           {formatTime(n.created_at)}
                         </span>
                       </div>
 
-                      <p className="text-text-muted text-[11px] line-clamp-2 mt-0.5 leading-relaxed">
+                      <p className="text-[#B8B8B8] text-[11px] line-clamp-2 mt-0.5 leading-relaxed">
                         {n.message}
                       </p>
 
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="text-[10px] text-lilac flex items-center gap-1 group-hover:underline">
+                        <span className="text-[10px] text-[#82EAF4] flex items-center gap-1 group-hover:underline">
                           View details <ChevronRight size={12} />
                         </span>
 
                         {isUnread && (
                           <button
                             onClick={(e) => handleMarkAsRead(e, n.id)}
-                            className="px-1.5 py-0.5 text-[10px] font-medium text-text-muted hover:text-text hover:bg-void rounded flex items-center gap-1 border border-border"
+                            className="px-1.5 py-0.5 text-[10px] font-medium text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#1A1A1A] rounded flex items-center gap-1 border border-[#353535]"
                             title="Mark as read"
                           >
                             <Check size={11} /> Read
@@ -285,14 +286,14 @@ export const NotificationDropdown: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="p-2.5 bg-void/60 border-t border-border flex items-center justify-between text-[11px] text-text-muted">
+          <div className="p-2.5 bg-[#101010] border-t border-[#353535] flex items-center justify-between text-[11px] text-[#B8B8B8]">
             <span className="font-mono text-[10px]">Golden Snitch Engine</span>
             <button
               onClick={() => {
                 setIsOpen(false);
                 navigate('/reports');
               }}
-              className="text-lilac hover:underline"
+              className="text-[#82EAF4] hover:underline"
             >
               Audit log
             </button>

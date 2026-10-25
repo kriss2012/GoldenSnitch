@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, User, LogOut } from 'lucide-react';
+import { Menu, Search, User, LogOut, ChevronDown, Gamepad2 } from 'lucide-react';
 import { GameTitle } from '../../types';
 import { NotificationDropdown } from './NotificationDropdown';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,8 @@ interface TopbarProps {
   selectedGame: GameTitle;
   onSelectGame: (g: GameTitle) => void;
 }
+
+const SUPPORTED_GAMES: GameTitle[] = ['VALORANT', 'Counter-Strike 2', 'League of Legends', 'Dota 2'];
 
 export const Topbar: React.FC<TopbarProps> = ({
   onOpenMobileNav,
@@ -22,21 +24,6 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const { user, logout } = useAuth();
 
-  // Compute breadcrumb/title from path
-  const getPageTitle = () => {
-    const p = location.pathname;
-    if (p.startsWith('/scouting')) return 'Scouting workspace';
-    if (p.startsWith('/players/')) return 'Player profile';
-    if (p.startsWith('/players')) return 'Player database';
-    if (p.startsWith('/compare')) return 'Player comparison';
-    if (p.startsWith('/rosters')) return 'Multi-roster management';
-    if (p.startsWith('/synergy')) return 'Squad synergy simulator';
-    if (p.startsWith('/watchlist')) return 'Recruitment pipeline';
-    if (p.startsWith('/reports')) return 'Scouting reports';
-    if (p.startsWith('/settings')) return 'System settings';
-    return 'Analyst overview';
-  };
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -45,12 +32,12 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="h-16 px-4 md:px-6 bg-surface border-b border-border flex items-center justify-between gap-4 sticky top-0 z-30 shrink-0 select-none">
-      {/* Left: Mobile Menu Toggle + Title */}
+    <header className="h-16 px-4 md:px-6 bg-[#101010] border-b border-[#353535] flex items-center justify-between gap-4 sticky top-0 z-30 shrink-0 select-none">
+      {/* Left: Mobile Menu Toggle + User Greeting */}
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onOpenMobileNav}
-          className="lg:hidden w-10 h-10 flex items-center justify-center text-text-muted hover:text-text rounded-control border border-border bg-surface shrink-0 focus-visible:outline-lilac"
+          className="lg:hidden w-10 h-10 flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-xl border border-[#353535] bg-[#242424] shrink-0"
           aria-label="Open navigation menu"
         >
           <Menu size={20} />
@@ -58,103 +45,110 @@ export const Topbar: React.FC<TopbarProps> = ({
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm md:text-base font-bold text-text truncate font-heading">
-              {getPageTitle()}
-            </h2>
-            <span className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-violet/20 border border-violet/40 text-lilac shadow-[0_0_10px_rgba(155,48,255,0.25)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet animate-pulse" />
-              Golden Snitch Engine
+            <span className="text-xs sm:text-sm font-semibold text-[#F5F5F5]">
+              Hi, {user?.name || 'Analyst'}!
+            </span>
+            <span className="hidden sm:inline-block text-xs text-[#B8B8B8]">
+              Golden Snitch live esports intelligence
             </span>
           </div>
         </div>
       </div>
 
-      {/* Middle: Global Search (Responsive) */}
-      <div className="hidden md:flex flex-1 max-w-md mx-2">
-        <form onSubmit={handleSearchSubmit} className="relative w-full">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+      {/* Center: Game Switcher Pills */}
+      <div className="hidden md:flex items-center gap-1.5 p-1 rounded-full bg-[#242424] border border-[#353535]">
+        {SUPPORTED_GAMES.map((g) => {
+          const isSelected = selectedGame === g;
+          return (
+            <button
+              key={g}
+              onClick={() => onSelectGame(g)}
+              className={`px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 ${
+                isSelected
+                  ? 'bg-[#2B2B2B] text-[#82EAF4] border border-[#82EAF4]/40 shadow-[0_0_10px_rgba(130,234,244,0.25)]'
+                  : 'text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#2B2B2B]/50'
+              }`}
+            >
+              {g}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Right: Search + Notifications + User Avatar */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Global Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="relative hidden sm:block w-48 lg:w-64">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search players, handles, or roles..."
-            className="w-full h-9 pl-9 pr-4 bg-void border border-border rounded-control text-xs text-text placeholder-text-muted/60 focus:border-lilac outline-none transition-colors"
+            placeholder="Search players, rosters..."
+            className="w-full h-9 pl-9 pr-3 rounded-full bg-[#242424] border border-[#353535] text-xs text-[#F5F5F5] placeholder-[#777777] focus:border-[#82EAF4] focus:outline-none focus:ring-1 focus:ring-[#82EAF4] transition-all"
           />
+          <Search size={14} className="absolute left-3 top-2.5 text-[#777777]" />
         </form>
-      </div>
 
-      {/* Right: Controls & Profile */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        {/* Game Selector */}
-        <select
-          value={selectedGame}
-          onChange={(e) => onSelectGame(e.target.value as GameTitle)}
-          className="h-9 px-2.5 bg-void border border-border rounded-control text-xs font-medium text-text focus:border-lilac outline-none cursor-pointer"
-          aria-label="Select competitive game title"
-        >
-          <option value="VALORANT">VALORANT</option>
-          <option value="Counter-Strike 2">CS2</option>
-          <option value="League of Legends">LoL</option>
-          <option value="Dota 2">Dota 2</option>
-          <option value="Apex Legends">Apex Legends</option>
-        </select>
-
-        {/* Notifications Dropdown (Critical Issue A) */}
+        {/* Live Notification Dropdown */}
         <NotificationDropdown />
 
-        {/* User Profile Menu with Dynamic Auth & Logout */}
+        {/* User Profile Pill & Dropdown */}
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-2 h-9 px-2 rounded-control border border-border hover:border-violet/40 hover:bg-surface transition-colors"
-            aria-label="User profile menu"
+            className="flex items-center gap-2 p-1.5 pr-2.5 rounded-full bg-[#242424] border border-[#353535] hover:border-[#82EAF4]/50 transition-colors"
+            aria-label="User account menu"
+            aria-expanded={showUserMenu}
           >
-            <div className="w-6 h-6 rounded-full bg-violet text-white flex items-center justify-center text-xs font-bold shadow-[0_0_8px_rgba(155,48,255,0.4)]">
-              {user?.name ? user.name.charAt(0).toUpperCase() : <User size={13} />}
+            <div className="w-7 h-7 rounded-full bg-[#82EAF4]/20 border border-[#82EAF4]/40 flex items-center justify-center text-[#82EAF4] font-bold text-xs">
+              {user?.name ? user.name[0].toUpperCase() : 'U'}
             </div>
-            <span className="hidden sm:inline text-xs font-medium text-text">
-              {user ? user.name : 'Sign in'}
-            </span>
+            <div className="hidden xl:block text-left">
+              <span className="text-xs font-semibold text-[#F5F5F5] block leading-none">
+                {user?.name || 'Staff User'}
+              </span>
+              <span className="text-[10px] text-[#82EAF4] font-mono block mt-0.5">
+                {user?.role ? user.role.replace('ROLE_', '') : 'Analyst'}
+              </span>
+            </div>
+            <ChevronDown size={14} className="text-[#B8B8B8]" />
           </button>
 
           {showUserMenu && (
             <div
-              className="absolute right-0 mt-2 w-56 bg-surface/95 backdrop-blur-md border border-border rounded-panel shadow-[0_8px_32px_rgba(0,0,0,0.8)] p-2 z-50 text-xs"
-              onClick={() => setShowUserMenu(false)}
+              className="absolute right-0 mt-2 w-52 rounded-2xl bg-[#242424] border border-[#353535] shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2"
+              onMouseLeave={() => setShowUserMenu(false)}
             >
-              <div className="px-3 py-2 border-b border-border/60">
-                <p className="font-semibold text-text truncate">{user?.name || 'Guest User'}</p>
-                <p className="text-text-muted text-[11px] truncate">
-                  {user?.organization || 'Logic Legend Esports'}
-                </p>
-                <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] bg-violet/20 border border-violet/40 text-lilac font-mono">
+              <div className="p-2 border-b border-[#353535] mb-1">
+                <p className="text-xs font-semibold text-[#F5F5F5] truncate">{user?.name || 'Staff User'}</p>
+                <p className="text-[11px] font-mono text-[#B8B8B8] truncate">{user?.username || 'user'}</p>
+                <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#82EAF4]/15 text-[#82EAF4] border border-[#82EAF4]/30">
                   {user?.role || 'ROLE_ANALYST'}
                 </span>
               </div>
-              <div className="pt-1 space-y-0.5">
-                <button
-                  onClick={() => navigate('/settings')}
-                  className="w-full text-left px-3 py-1.5 text-text-muted hover:text-text hover:bg-void rounded-control transition-colors"
-                >
-                  System settings
-                </button>
-                <button
-                  onClick={() => navigate('/reports')}
-                  className="w-full text-left px-3 py-1.5 text-text-muted hover:text-text hover:bg-void rounded-control transition-colors"
-                >
-                  Compliance audit
-                </button>
-                <div className="border-t border-border/50 my-1" />
-                <button
-                  onClick={async () => {
-                    await logout();
-                    navigate('/login');
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-danger hover:bg-danger/10 rounded-control flex items-center gap-1.5 transition-colors font-medium"
-                >
-                  <LogOut size={13} /> Sign out
-                </button>
-              </div>
+
+              <button
+                onClick={() => {
+                  setShowUserMenu(false);
+                  navigate('/settings');
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#2B2B2B] transition-colors"
+              >
+                <User size={14} className="text-[#82EAF4]" />
+                <span>Account & Rights</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowUserMenu(false);
+                  logout();
+                  navigate('/login');
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors mt-1"
+              >
+                <LogOut size={14} />
+                <span>Sign Out</span>
+              </button>
             </div>
           )}
         </div>

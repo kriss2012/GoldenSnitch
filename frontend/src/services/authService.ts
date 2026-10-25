@@ -59,6 +59,24 @@ export const authService = {
     return api.post('/api/v1/auth/reset-password', { token, new_password: newPassword });
   },
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ status: string; message: string }> {
+    return api.post('/api/v1/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  },
+
+  async exportUserData(): Promise<any> {
+    return api.get('/api/v1/users/me/export');
+  },
+
+  async deleteAccount(): Promise<{ status: string; message: string }> {
+    const res = await api.delete<{ status: string; message: string }>('/api/v1/users/me');
+    localStorage.removeItem('gs_token');
+    localStorage.removeItem('gs_user');
+    return res;
+  },
+
   getCurrentUser(): AuthUser | null {
     const raw = localStorage.getItem('gs_user');
     if (!raw) return null;

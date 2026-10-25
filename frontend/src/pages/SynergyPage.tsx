@@ -17,6 +17,8 @@ import { TalentBadge } from '../components/common/TalentBadge';
 import { ConfidenceBadge } from '../components/common/ConfidenceBadge';
 import { scoutService } from '../services/scoutService';
 import { Player, Roster } from '../types';
+import { RosterSynergyBreakdown } from '../components/common/charts/RosterSynergyBreakdown';
+
 
 export const SynergyPage: React.FC = () => {
   const navigate = useNavigate();
@@ -126,7 +128,17 @@ export const SynergyPage: React.FC = () => {
 
       {/* Simulation Results Grid */}
       {simulationResult && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="space-y-6">
+          {/* Polished 5-Axis Synergy Breakdown */}
+          <RosterSynergyBreakdown
+            rosterName={currentRoster.name}
+            game={currentRoster.game}
+            synergyScore={simulationResult.currentSynergy}
+            projectedScore={simulationResult.newSynergy}
+            candidateHandle={simulationResult.candidate.handle}
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column (5 cols): Before vs After Metrics */}
           <div className="lg:col-span-5 space-y-4">
             <Card title="Synergy delta projection" variant="plum">
@@ -238,6 +250,7 @@ export const SynergyPage: React.FC = () => {
             </Card>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

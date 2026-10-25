@@ -13,15 +13,20 @@ services:
     environment:
       - APP_ENV=production
       - SCOUTGRID_DB=/app/data/scoutgrid.db
-      - SCOUTGRID_SECRET_KEY=${SCOUTGRID_SECRET_KEY:-golden_snitch_prod_secret_key_change_me}
+      - SCOUTGRID_SECRET_KEY=${SCOUTGRID_SECRET_KEY:-golden_snitch_production_secret_key_2026_logic_legend}
       - FRONTEND_ORIGIN=http://localhost:3000
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
@@ -34,6 +39,11 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   default:

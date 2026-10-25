@@ -1,0 +1,97 @@
+version: '3.8'
+
+# ==============================================================================
+# Golden Snitch — Production Deployment Compose Stack
+# Architecture:
+#   [Client/Internet] 
+#         | (Port 80/443)
+#         v
+#   [Reverse Proxy: Nginx / Caddy]
+#         +-------------------+-------------------+
+#         | (Static SPA & Assets)                 | (API & Health Proxy)
+#         v                                       v
+#   [Frontend: SPA Container]             [Backend: FastAPI Container]
+#                                                 |
+#                                                 v
+#                                         [Persistent SQLite Volume]
+# ==============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scoutgrid-prod-backend
+    expose:
+      - "8000"
+    volumes:
+      - scoutgrid-data:/app/data
+    environment:
+      - APP_ENV=production
+      - DEBUG=false
+      - SCOUTGRID_DB=/app/data/scoutgrid.db
+      - SCOUTGRID_SECRET_KEY=${SCOUTGRID_SECRET_KEY:?Error: SCOUTGRID_SECRET_KEY must be set in production}
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-https://app.goldensnitch.gg}
+      - HENRIK_API_KEY=${HENRIK_API_KEY:-}
+      - STEAM_WEB_API_KEY=${STEAM_WEB_API_KEY:-}
+      - PANDASCORE_API_KEY=${PANDASCORE_API_KEY:-}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: scoutgrid-prod-frontend
+    expose:
+      - "80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Production Edge Reverse Proxy (NGINX)
+  proxy:
+    image: nginx:1.25-alpine
+    container_name: scoutgrid-prod-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  scoutgrid-data:
+    name: scoutgrid-production-data
+
+networks:
+  default:
+    name: scoutgrid-prod-network

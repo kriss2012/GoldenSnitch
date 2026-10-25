@@ -1,0 +1,27 @@
+<svg width="240" height="200" viewBox="0 0 240 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gsGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#FFD369" />
+      <stop offset="50%" stopColor="#F5B83D" />
+      <stop offset="100%" stopColor="#C88E1C" />
+    </linearGradient>
+  </defs>
+  <g fill="url(#gsGoldGrad)">
+    <polygon points="85,68 20,4 38,24 48,32 58,40 68,52 78,64" />
+    <polygon points="76,64 26,26 44,42 56,50 66,60" />
+    <polygon points="68,66 32,46 50,60 62,68" />
+    <polygon points="155,68 220,4 202,24 192,32 182,40 172,52 162,64" />
+    <polygon points="164,64 214,26 196,42 184,50 174,60" />
+    <polygon points="172,66 208,46 190,60 178,68" />
+  </g>
+  <circle cx="120" cy="100" r="42" fill="url(#gsGoldGrad)" />
+  <g stroke="#181818" stroke-width="2.5" stroke-linecap="round" fill="none">
+    <circle cx="120" cy="100" r="42" stroke-width="1.5" stroke="#D4952B" />
+    <path d="M120 58 C115 72 105 82 92 88 C82 92 80 98 80 102" />
+    <path d="M120 58 C125 72 135 82 148 88 C158 92 160 98 160 102" />
+    <path d="M82 106 C96 114 110 114 124 108" />
+    <path d="M84 116 C98 124 114 124 128 116" />
+    <path d="M158 106 C144 114 130 114 116 108" />
+    <path d="M156 116 C142 124 126 124 112 116" />
+  </g>
+</svg>

@@ -37,8 +37,8 @@ export const MOCK_PLAYERS: Player[] = [
     },
     scoutingNotes: 'PRD §10.3 Recommended Target. Addresses Sentinels utility deficit (covers gap 80 vs 35 incumbent Kairo). Vocal in high-pressure rounds with certified 4.5/5 scout rating.',
     certifiedAnnotations: [
-      { scout: 'Dev Sharma', role: 'Head Coach', date: '2024-10-18', rating: 4, notes: 'Exceptional mid-round utility pacing. Delays executes by 18+ seconds.' },
-      { scout: 'Arjun Patel', role: 'Talent Scout', date: '2024-10-20', rating: 5, notes: 'Calm comms during 11-12 deciders. Ideal fit for Sentinels structure.' },
+      { scout: 'Lead Analyst', role: 'Head Coach', date: '2024-10-18', rating: 4, notes: 'Exceptional mid-round utility pacing. Delays executes by 18+ seconds.' },
+      { scout: 'Senior Scout', role: 'Talent Scout', date: '2024-10-20', rating: 5, notes: 'Calm comms during 11-12 deciders. Ideal fit for Sentinels structure.' },
     ],
     dataCompleteness: 100,
     lastAnalyzed: '2024-10-24',
@@ -84,8 +84,8 @@ export const MOCK_PLAYERS: Player[] = [
     },
     scoutingNotes: 'PRD §10.3 Statistical Decoy. Despite leading surface combat stats with 285 ACS, 42% of frags are non-impact save-round exits. Does not cover Sentinels utility gap.',
     certifiedAnnotations: [
-      { scout: 'Dev Sharma', role: 'Head Coach', date: '2024-10-15', rating: 2, notes: 'Low communication volume. Often takes isolated duels without utility support.' },
-      { scout: 'Arjun Patel', role: 'Talent Scout', date: '2024-10-16', rating: 2, notes: 'Does not shotcall. Relies on instinct rather than set team protocols.' },
+      { scout: 'Lead Analyst', role: 'Head Coach', date: '2024-10-15', rating: 2, notes: 'Low communication volume. Often takes isolated duels without utility support.' },
+      { scout: 'Senior Scout', role: 'Talent Scout', date: '2024-10-16', rating: 2, notes: 'Does not shotcall. Relies on instinct rather than set team protocols.' },
     ],
     dataCompleteness: 95,
     lastAnalyzed: '2024-10-24',
@@ -283,7 +283,7 @@ export const MOCK_PLAYERS: Player[] = [
     },
     scoutingNotes: 'Elite global IGL. Demonstrates exceptional tactical timeouts and late-round counter-calling.',
     certifiedAnnotations: [
-      { scout: 'Dev Sharma', role: 'Head Coach', date: '2024-09-12', rating: 5, notes: 'World-class playbook and mid-round audible adjustments.' },
+      { scout: 'Lead Analyst', role: 'Head Coach', date: '2024-09-12', rating: 5, notes: 'World-class playbook and mid-round audible adjustments.' },
     ],
     dataCompleteness: 100,
     lastAnalyzed: '2024-10-22',
@@ -521,7 +521,7 @@ export const MOCK_PLAYERS: Player[] = [
     },
     scoutingNotes: 'Most successful captain in Counter-Strike history. Unmatched tactical timeout recovery.',
     certifiedAnnotations: [
-      { scout: 'Dev Sharma', role: 'Head Coach', date: '2024-08-10', rating: 5, notes: 'Masterclass T-side calling. Greatest situational caller under tournament pressure.' },
+      { scout: 'Lead Analyst', role: 'Head Coach', date: '2024-08-10', rating: 5, notes: 'Masterclass T-side calling. Greatest situational caller under tournament pressure.' },
     ],
     dataCompleteness: 100,
     lastAnalyzed: '2024-10-24',
@@ -563,7 +563,7 @@ export const MOCK_PLAYERS: Player[] = [
     },
     scoutingNotes: 'Led multiple underdog rosters to Major finals through innovative mid-round protocols.',
     certifiedAnnotations: [
-      { scout: 'Dev Sharma', role: 'Head Coach', date: '2024-08-20', rating: 5, notes: 'Revolutionary banana control protocols on Inferno.' },
+      { scout: 'Lead Analyst', role: 'Head Coach', date: '2024-08-20', rating: 5, notes: 'Revolutionary banana control protocols on Inferno.' },
     ],
     dataCompleteness: 98,
     lastAnalyzed: '2024-10-23',

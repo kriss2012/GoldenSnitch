@@ -1,0 +1,123 @@
+{
+  "model_name": "GoldenSnitch_Valorant_LAN_Trained_v1",
+  "dataset_file": "Valo_Lan_Stats_10_Matches.xlsx",
+  "dataset_sha256": "6eb41c126862cae01ee319ae47d3c9ceaee19f9dfff26e0a73036202104ce7a8",
+  "matches_count": 10,
+  "sample_size_observations": 1600,
+  "unique_players_trained": 156,
+  "distributions": {
+    "acs": {
+      "count": 1600,
+      "mean": 194.49,
+      "stdev": 59.45,
+      "min": 80.0,
+      "p5": 101.4,
+      "p25": 150.7,
+      "median": 190.6,
+      "p75": 232.5,
+      "p95": 301.1,
+      "max": 350.0
+    },
+    "kd": {
+      "count": 1600,
+      "mean": 1.01,
+      "stdev": 0.39,
+      "min": 0.2,
+      "p5": 0.48,
+      "p25": 0.73,
+      "median": 0.94,
+      "p75": 1.23,
+      "p95": 1.76,
+      "max": 2.62
+    },
+    "kda": {
+      "count": 1600,
+      "mean": 1.37,
+      "stdev": 0.48,
+      "min": 0.33,
+      "p5": 0.7,
+      "p25": 1.03,
+      "median": 1.29,
+      "p75": 1.64,
+      "p95": 2.29,
+      "max": 3.57
+    },
+    "k_per_map": {
+      "count": 1600,
+      "mean": 14.37,
+      "stdev": 4.69,
+      "min": 3.0,
+      "p5": 7.0,
+      "p25": 11.0,
+      "median": 14.0,
+      "p75": 17.0,
+      "p95": 22.67,
+      "max": 36.0
+    },
+    "d_per_map": {
+      "count": 1600,
+      "mean": 14.94,
+      "stdev": 3.25,
+      "min": 7.0,
+      "p5": 9.67,
+      "p25": 12.67,
+      "median": 15.0,
+      "p75": 17.0,
+      "p95": 20.5,
+      "max": 27.0
+    },
+    "a_per_map": {
+      "count": 1600,
+      "mean": 5.1,
+      "stdev": 2.52,
+      "min": 0.0,
+      "p5": 1.33,
+      "p25": 3.0,
+      "median": 5.0,
+      "p75": 6.67,
+      "p95": 9.67,
+      "max": 16.0
+    }
+  },
+  "calibrated_bounds": {
+    "acs": {
+      "lo": 101.4,
+      "hi": 301.1,
+      "dir": 1
+    },
+    "kd": {
+      "lo": 0.48,
+      "hi": 1.76,
+      "dir": 1
+    },
+    "kda": {
+      "lo": 0.7,
+      "hi": 2.29,
+      "dir": 1
+    },
+    "k_per_map": {
+      "lo": 7.0,
+      "hi": 22.67,
+      "dir": 1
+    },
+    "d_per_map": {
+      "lo": 9.67,
+      "hi": 20.5,
+      "dir": -1
+    },
+    "a_per_map": {
+      "lo": 1.33,
+      "hi": 9.67,
+      "dir": 1
+    }
+  },
+  "impact_weights": {
+    "acs": 0.3,
+    "k_per_map": 0.15,
+    "kd": 0.2,
+    "d_per_map": 0.1,
+    "a_per_map": 0.15,
+    "kda": 0.1
+  },
+  "provenance": "vct_lan_masters_champions"
+}

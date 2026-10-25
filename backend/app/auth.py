@@ -3,7 +3,7 @@ Uses standard library hashlib and hmac for zero-dependency robust cryptographic 
 """
 import base64, hashlib, hmac, json, os, secrets, time
 from typing import Optional
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, status, Request
 from pydantic import BaseModel
 
 SECRET_KEY = os.environ.get("SCOUTGRID_SECRET_KEY", "golden_snitch_production_secret_key_2026_logic_legend")
@@ -17,7 +17,8 @@ class User(BaseModel):
     organization: str
 
 class UserLogin(BaseModel):
-    username: str
+    username: Optional[str] = None
+    email: Optional[str] = None
     password: str
 
 class UserRegister(BaseModel):
@@ -39,12 +40,11 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: User
 
-# In-memory default users for demonstration & seeding
-DEFAULT_USERS = {
+SYSTEM_USERS = {
     "maya": {
         "id": "USR-001",
         "username": "maya",
-        "name": "Maya Lin",
+        "name": "General Manager",
         "role": "ROLE_GM",
         "organization": "Logic Legend Esports",
         "salt": "d4a8e6f1a9b2c3d4",
@@ -53,7 +53,7 @@ DEFAULT_USERS = {
     "dev": {
         "id": "USR-002",
         "username": "dev",
-        "name": "Dev Sharma",
+        "name": "Head Coach",
         "role": "ROLE_COACH",
         "organization": "Logic Legend Esports",
         "salt": "e1f2a3b4c5d6e7f8",
@@ -62,13 +62,14 @@ DEFAULT_USERS = {
     "arjun": {
         "id": "USR-003",
         "username": "arjun",
-        "name": "Arjun Patel",
+        "name": "Talent Scout",
         "role": "ROLE_SCOUT",
         "organization": "Logic Legend Esports",
         "salt": "a9b8c7d6e5f4a3b2",
         "hash": "310344d2d46e3e1be22a6113b5a19ef47e452145bfeae21262d989f6b9ce0552",  # scout123
     },
 }
+DEFAULT_USERS = SYSTEM_USERS
 
 def hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
     if salt is None:
@@ -81,7 +82,7 @@ def verify_password(stored_hash: str, salt: str, password: str) -> bool:
     return hmac.compare_digest(stored_hash, h)
 
 # Pre-compute & set hashes for default users at initialization
-for u, data in DEFAULT_USERS.items():
+for u, data in SYSTEM_USERS.items():
     pw = "admin123" if u == "maya" else "coach123" if u == "dev" else "scout123"
     h, s = hash_password(pw, data["salt"])
     data["hash"] = h
@@ -135,6 +136,10 @@ def decode_access_token(token: str, conn=None) -> Optional[User]:
             from . import db
             if db.is_token_revoked(conn, token_hash(token)):
                 return None
+            user_row = conn.execute("SELECT id FROM users WHERE id=?", (payload["sub"],)).fetchone()
+            default_ids = {u["id"] for u in SYSTEM_USERS.values()}
+            if not user_row and payload["sub"] not in default_ids:
+                return None
         
         return User(
             id=payload["sub"],
@@ -152,20 +157,44 @@ def authenticate_user(username: str, password: str, conn=None) -> Optional[User]
     # 1. Check database users table
     if conn:
         from . import db
-        user_row = db.get_user_by_username(conn, clean_uname)
+        user_row = conn.execute(
+            "SELECT * FROM users WHERE LOWER(username)=? OR LOWER(email)=?",
+            (clean_uname, clean_uname)
+        ).fetchone()
         if user_row:
-            if verify_password(user_row["password_hash"], user_row["salt"], password):
+            u_dict = dict(user_row)
+            pw_hash = u_dict.get("password_hash")
+            salt = u_dict.get("salt")
+            ok = False
+            # Check argon2 hash if present
+            if pw_hash and ("$argon2" in pw_hash):
+                try:
+                    from .security import verify_password as argon2_verify
+                    ok = argon2_verify(password, pw_hash)
+                except Exception:
+                    pass
+            # Legacy salt verify
+            if not ok and pw_hash and salt:
+                ok = verify_password(pw_hash, salt, password)
+            if not ok and pw_hash and not salt:
+                try:
+                    from .security import verify_password as argon2_verify
+                    ok = argon2_verify(password, pw_hash)
+                except Exception:
+                    pass
+
+            if ok and u_dict.get("active", 1):
                 return User(
-                    id=user_row["id"],
-                    username=user_row["username"],
-                    name=user_row["name"],
-                    role=user_row["role"],
-                    organization=user_row["organization"],
+                    id=u_dict["id"],
+                    username=u_dict.get("username") or clean_uname.split("@")[0],
+                    name=u_dict.get("name") or "User",
+                    role=u_dict.get("role") or "ROLE_SCOUT",
+                    organization=u_dict.get("org") or u_dict.get("organization") or "Logic Legend Esports",
                 )
             return None
             
-    # 2. Fallback to DEFAULT_USERS memory cache
-    u = DEFAULT_USERS.get(clean_uname)
+    # 2. Fallback to SYSTEM_USERS memory cache
+    u = SYSTEM_USERS.get(clean_uname)
     if not u:
         return None
     if verify_password(u["hash"], u["salt"], password):
@@ -178,23 +207,38 @@ def authenticate_user(username: str, password: str, conn=None) -> Optional[User]
         )
     return None
 
-def get_current_user(authorization: Optional[str] = Header(None)) -> User:
-    """Dependency that extracts user from Bearer token, or defaults to Maya (GM) for testing convenience."""
+def get_current_user(request: Request = None, authorization: Optional[str] = Header(None)) -> User:
+    """Dependency that extracts user from Bearer token or session cookie, strictly rejecting unauthenticated requests."""
+    token = None
     if authorization and authorization.lower().startswith("bearer "):
         token = authorization.split(" ", 1)[1].strip()
+    elif request and request.cookies.get("gs_session"):
+        token = request.cookies.get("gs_session")
+
+    if token:
         from . import db
         conn = db.connect()
         user = decode_access_token(token, conn)
         conn.close()
         if user:
             return user
+        # Also try JWT token from security.py
+        try:
+            from .security import read_token
+            claims = read_token(token)
+            conn = db.connect()
+            u_dict = db.get_user(conn, claims.get("sub"))
+            conn.close()
+            if u_dict and u_dict.get("active", 1):
+                return User(
+                    id=u_dict["id"],
+                    username=u_dict.get("username") or "user",
+                    name=u_dict.get("name") or "User",
+                    role=u_dict.get("role") or "ROLE_SCOUT",
+                    organization=u_dict.get("org") or u_dict.get("organization") or "Logic Legend Esports",
+                )
+        except Exception:
+            pass
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-    # Demo default user: Maya Lin (GM)
-    return User(
-        id="USR-001",
-        username="maya",
-        name="Maya Lin",
-        role="ROLE_GM",
-        organization="Logic Legend Esports",
-    )
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication credentials were not provided")
 

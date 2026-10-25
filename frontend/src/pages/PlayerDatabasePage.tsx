@@ -1,13 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Filter, BookmarkPlus, ArrowUpDown, Download, Upload, Shield, CheckCircle, AlertTriangle, X, FileText } from 'lucide-react';
+import { Search, Filter, BookmarkPlus, ArrowUpDown, Download, Upload, Shield, CheckCircle, AlertTriangle, X, FileText, Zap, Loader2, Globe, ShieldCheck, ExternalLink, Activity } from 'lucide-react';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { TalentBadge } from '../components/common/TalentBadge';
 import { ConfidenceBadge } from '../components/common/ConfidenceBadge';
 import { TrendIndicator } from '../components/common/TrendIndicator';
+import { PlayerAvatar } from '../components/common/PlayerAvatar';
+import { RoleBadge } from '../components/common/RoleBadge';
+import { ShortlistButton } from '../components/common/ShortlistButton';
 import { scoutService } from '../services/scoutService';
 import { GameTitle, Player } from '../types';
+import { esportsIntelligenceService, LiveSearchResult } from '../services/esportsIntelligenceService';
+import { ClaimProfileModal } from '../components/profile/ClaimProfileModal';
+import { TalentExplorerTable } from '../components/scout/TalentExplorerTable';
 
 export const PlayerDatabasePage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +24,27 @@ export const PlayerDatabasePage: React.FC = () => {
 
   // Filter state
   const [search, setSearch] = useState(initialQuery);
+  const [searchMode, setSearchMode] = useState<'scoutiq' | 'database' | 'live'>('scoutiq');
+  const [liveResults, setLiveResults] = useState<{ local: LiveSearchResult[]; live: LiveSearchResult[] }>({ local: [], live: [] });
+  const [isLiveSearching, setIsLiveSearching] = useState(false);
+  const [claimingPlayer, setClaimingPlayer] = useState<{ id: string; name: string; game: string } | null>(null);
+
+  const executeLiveSearch = async (queryText: string) => {
+    if (!queryText.trim()) return;
+    setIsLiveSearching(true);
+    try {
+      const res = await esportsIntelligenceService.liveSearchPlayers(
+        queryText,
+        selectedGame === 'All' ? undefined : selectedGame
+      );
+      setLiveResults({ local: res.local_results, live: res.live_results });
+    } catch (err) {
+      console.error('Live search error', err);
+    } finally {
+      setIsLiveSearching(false);
+    }
+  };
+
   const [selectedGame, setSelectedGame] = useState<string>('All');
   const [selectedRole, setSelectedRole] = useState<string>('All');
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
@@ -147,34 +174,77 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
         </div>
       </div>
 
-      {/* Filter Surface Panel */}
-      <Card>
+      {/* Mode Selector */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setSearchMode('scoutiq')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            searchMode === 'scoutiq'
+              ? 'bg-[#82EAF4] text-[#0B0B0B] shadow-[0_0_12px_rgba(130,234,244,0.35)]'
+              : 'bg-[#242424] border border-[#353535] text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#2B2B2B]'
+          }`}
+        >
+          <Activity size={14} className={searchMode === 'scoutiq' ? 'text-[#0B0B0B]' : 'text-[#82EAF4]'} />
+          ScoutIQ Talent Explorer (Live Credible Rankings & IGL Intel)
+        </button>
+        <button
+          onClick={() => setSearchMode('database')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            searchMode === 'database'
+              ? 'bg-[#82EAF4] text-[#0B0B0B] shadow-[0_0_12px_rgba(130,234,244,0.35)]'
+              : 'bg-[#242424] border border-[#353535] text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#2B2B2B]'
+          }`}
+        >
+          Raw Database Records
+        </button>
+        <button
+          onClick={() => {
+            setSearchMode('live');
+            if (search.trim()) executeLiveSearch(search);
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            searchMode === 'live'
+              ? 'bg-[#82EAF4] text-[#0B0B0B] shadow-[0_0_12px_rgba(130,234,244,0.35)]'
+              : 'bg-[#242424] border border-[#353535] text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#2B2B2B]'
+          }`}
+        >
+          <Zap size={14} className={searchMode === 'live' ? 'text-[#0B0B0B]' : 'text-[#82EAF4]'} />
+          Live Provider Search (HenrikDev / Steam API)
+        </button>
+      </div>
+
+      {searchMode === 'scoutiq' ? (
+        <TalentExplorerTable initialGame={selectedGame === 'All' ? 'valorant' : selectedGame} />
+      ) : searchMode === 'database' ? (
+        <>
+          {/* Filter Surface Panel */}
+          <Card>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Search */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <label className="text-xs font-medium text-text-muted block mb-1">Search handle</label>
+            <label className="text-xs font-medium text-[#B8B8B8] block mb-1">Search handle</label>
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#777777]" />
               <input
                 type="text"
                 placeholder="Filter players..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-9 pl-8 pr-3 bg-void border border-border rounded-control text-xs text-text placeholder-text-muted/60 focus:border-lilac outline-none"
+                className="w-full h-9 pl-8 pr-3 bg-[#1A1A1A] border border-[#353535] rounded-xl text-xs text-[#F5F5F5] placeholder-[#777777] focus:border-[#82EAF4] outline-none"
               />
             </div>
           </div>
 
           {/* Game Title */}
           <div>
-            <label className="text-xs font-medium text-text-muted block mb-1">Title</label>
+            <label className="text-xs font-medium text-[#B8B8B8] block mb-1">Title</label>
             <select
               value={selectedGame}
               onChange={(e) => {
                 setSelectedGame(e.target.value);
                 setSelectedRole('All');
               }}
-              className="w-full h-9 px-3 bg-void border border-border rounded-control text-xs text-text focus:border-lilac outline-none cursor-pointer"
+              className="w-full h-9 px-3 bg-[#1A1A1A] border border-[#353535] rounded-xl text-xs text-[#F5F5F5] focus:border-[#82EAF4] outline-none cursor-pointer"
             >
               <option value="All">All games</option>
               <option value="VALORANT">VALORANT</option>
@@ -185,11 +255,11 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
 
           {/* Role */}
           <div>
-            <label className="text-xs font-medium text-text-muted block mb-1">Role</label>
+            <label className="text-xs font-medium text-[#B8B8B8] block mb-1">Role</label>
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="w-full h-9 px-3 bg-void border border-border rounded-control text-xs text-text focus:border-lilac outline-none cursor-pointer"
+              className="w-full h-9 px-3 bg-[#1A1A1A] border border-[#353535] rounded-xl text-xs text-[#F5F5F5] focus:border-[#82EAF4] outline-none cursor-pointer"
             >
               <option value="All">All roles</option>
               {roleOptions.map(r => (
@@ -200,11 +270,11 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
 
           {/* Availability */}
           <div>
-            <label className="text-xs font-medium text-text-muted block mb-1">Availability</label>
+            <label className="text-xs font-medium text-[#B8B8B8] block mb-1">Availability</label>
             <select
               value={selectedAvailability}
               onChange={(e) => setSelectedAvailability(e.target.value)}
-              className="w-full h-9 px-3 bg-void border border-border rounded-control text-xs text-text focus:border-lilac outline-none cursor-pointer"
+              className="w-full h-9 px-3 bg-[#1A1A1A] border border-[#353535] rounded-xl text-xs text-[#F5F5F5] focus:border-[#82EAF4] outline-none cursor-pointer"
             >
               <option value="All">All statuses</option>
               <option value="Available">Free Agent</option>
@@ -215,8 +285,8 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
           {/* Min Talent Index */}
           <div>
             <div className="flex justify-between items-center text-xs mb-1">
-              <span className="text-text-muted">Min Talent Index</span>
-              <span className="font-mono font-bold text-text">{minTalent}</span>
+              <span className="text-[#B8B8B8]">Min Talent Index</span>
+              <span className="font-mono font-bold text-[#82EAF4]">{minTalent}</span>
             </div>
             <input
               type="range"
@@ -225,7 +295,7 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
               step="5"
               value={minTalent}
               onChange={(e) => setMinTalent(parseInt(e.target.value))}
-              className="w-full accent-violet mt-1"
+              className="w-full accent-[#82EAF4] mt-1 cursor-pointer"
             />
           </div>
         </div>
@@ -239,12 +309,12 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
         <div className="overflow-x-auto -mx-5 px-5">
           <table className="w-full min-w-[700px] text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-border text-text-muted uppercase text-[11px] font-semibold tracking-wider">
+              <tr className="border-b border-[#353535] text-[#B8B8B8] uppercase text-[11px] font-semibold tracking-wider">
                 <th className="py-2.5 px-3">Player</th>
                 <th className="py-2.5 px-3">Title & Role</th>
                 <th className="py-2.5 px-3">Current Team</th>
                 <th
-                  className="py-2.5 px-3 cursor-pointer hover:text-text select-none"
+                  className="py-2.5 px-3 cursor-pointer hover:text-[#F5F5F5] select-none"
                   onClick={() => {
                     if (sortBy === 'talentIndex') setSortAsc(!sortAsc);
                     else { setSortBy('talentIndex'); setSortAsc(false); }
@@ -257,7 +327,7 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
                 </th>
                 <th className="py-2.5 px-3">Confidence</th>
                 <th
-                  className="py-2.5 px-3 cursor-pointer hover:text-text select-none"
+                  className="py-2.5 px-3 cursor-pointer hover:text-[#F5F5F5] select-none"
                   onClick={() => {
                     if (sortBy === 'matchesPlayed') setSortAsc(!sortAsc);
                     else { setSortBy('matchesPlayed'); setSortAsc(false); }
@@ -273,38 +343,48 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
                 <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody className="divide-y divide-[#353535]/50">
               {filteredPlayers.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-text-muted">
+                  <td colSpan={9} className="py-8 text-center text-[#B8B8B8]">
                     No players found matching the current query. Try clearing filters.
                   </td>
                 </tr>
               ) : (
                 filteredPlayers.map((p) => (
-                  <tr key={p.id} className="hover:bg-surface/80 transition-colors">
-                    {/* Handle & Name */}
+                  <tr key={p.id} className="hover:bg-[#2B2B2B] transition-colors">
+                    {/* Handle & Name with PlayerAvatar */}
                     <td className="py-3 px-3">
-                      <div>
-                        <button
-                          onClick={() => navigate(`/players/${p.id}`)}
-                          className="font-bold text-text hover:text-lilac transition-colors text-sm text-left font-heading"
-                        >
-                          {p.handle}
-                        </button>
-                        <div className="text-[11px] text-text-muted">{p.realName} · {p.nationality}</div>
+                      <div className="flex items-center gap-2.5">
+                        <PlayerAvatar
+                          handle={p.handle}
+                          role={p.role}
+                          game={p.game}
+                          size="sm"
+                        />
+                        <div>
+                          <button
+                            onClick={() => navigate(`/players/${p.id}`)}
+                            className="font-bold text-[#F5F5F5] hover:text-[#82EAF4] transition-colors text-sm text-left font-heading"
+                          >
+                            {p.handle}
+                          </button>
+                          <div className="text-[11px] text-[#B8B8B8]">{p.realName} · {p.nationality}</div>
+                        </div>
                       </div>
                     </td>
 
                     {/* Game & Role */}
                     <td className="py-3 px-3">
-                      <span className="font-medium text-text">{p.game}</span>
-                      <div className="text-[11px] text-text-muted">{p.role}</div>
+                      <span className="font-medium text-[#F5F5F5] text-xs">{p.game}</span>
+                      <div className="mt-0.5">
+                        <RoleBadge role={p.role} size="sm" />
+                      </div>
                     </td>
 
                     {/* Team */}
-                    <td className="py-3 px-3 text-text font-medium">
-                      {p.team || <span className="text-text-muted italic">Unsigned</span>}
+                    <td className="py-3 px-3 text-[#F5F5F5] font-medium text-xs">
+                      {p.team || <span className="text-[#777777] italic">Unsigned</span>}
                     </td>
 
                     {/* Talent Index */}
@@ -318,7 +398,7 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
                     </td>
 
                     {/* Matches */}
-                    <td className="py-3 px-3 font-mono text-text-muted">
+                    <td className="py-3 px-3 font-mono text-[#B8B8B8]">
                       {p.matchesPlayed}
                     </td>
 
@@ -331,32 +411,25 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
                     <td className="py-3 px-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                         p.availability === 'Available'
-                          ? 'bg-success/15 text-success border border-success/30'
-                          : 'bg-surface text-text-muted border border-border'
+                          ? 'bg-[#82EAF4]/15 text-[#82EAF4] border border-[#82EAF4]/30'
+                          : 'bg-[#2B2B2B] text-[#B8B8B8] border border-[#353535]'
                       }`}>
                         {p.availability}
                       </span>
                     </td>
 
-                    {/* Actions */}
-                    <td className="py-3 px-3 text-right space-x-1.5">
-                      <button
-                        onClick={() => {
-                          scoutService.addToWatchlist(p, 'Discovered');
-                          navigate('/watchlist');
-                        }}
-                        className="p-1.5 text-text-muted hover:text-lilac rounded hover:bg-void transition-colors"
-                        title="Add to Watchlist"
-                      >
-                        <BookmarkPlus size={15} />
-                      </button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => navigate(`/players/${p.id}`)}
-                      >
-                        Dossier
-                      </Button>
+                    {/* Prominent Shortlist & Dossier Actions */}
+                    <td className="py-3 px-3 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <ShortlistButton player={p} size="sm" />
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => navigate(`/players/${p.id}`)}
+                        >
+                          Dossier
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -365,6 +438,238 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
           </table>
         </div>
       </Card>
+      </>
+      ) : (
+        <div className="space-y-6">
+          {/* Live Search Controls */}
+          <Card>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#777777]" />
+                  <input
+                    type="text"
+                    placeholder="Search player name or Riot ID (e.g. Boaster, Aspas, Mirage, TenZ, Chronicle)..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') executeLiveSearch(search);
+                    }}
+                    className="w-full h-10 pl-9 pr-3 bg-[#1A1A1A] border border-[#353535] rounded-xl text-xs text-[#F5F5F5] placeholder-[#777777] focus:border-[#82EAF4] outline-none font-mono"
+                  />
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => executeLiveSearch(search)}
+                  disabled={isLiveSearching || !search.trim()}
+                >
+                  {isLiveSearching ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Zap size={14} className="mr-1.5" />}
+                  Search Live Feeds
+                </Button>
+              </div>
+
+              {/* API Key Mistake Detection & Helpful Guidance */}
+              {search.trim().toUpperCase().startsWith('HDEV-') && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2.5">
+                  <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-amber-300">
+                      You entered your HenrikDev API Key into the player search box!
+                    </p>
+                    <p className="text-amber-200/90 text-[11px] leading-relaxed">
+                      Your API key is <strong>already configured and authenticated</strong> in your <code className="bg-amber-950/60 px-1.5 py-0.5 rounded text-amber-300 font-mono">.env</code> file.
+                      This search bar is used to look up <strong>player handles</strong> (e.g. VCT pros or Riot IDs like <code className="bg-amber-950/60 px-1 py-0.5 rounded font-mono">Name#TAG</code>).
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[11px] text-amber-300 font-medium">Try searching:</span>
+                      {['Boaster', 'Aspas', 'Mirage', 'valyn', 'Chronicle'].map((handle) => (
+                        <button
+                          key={handle}
+                          type="button"
+                          onClick={() => {
+                            setSearch(handle);
+                            executeLiveSearch(handle);
+                          }}
+                          className="px-2 py-0.5 rounded bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 font-bold text-[11px] transition-colors border border-amber-400/30"
+                        >
+                          {handle}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Sample Pro Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="text-[#888888] text-[11px]">Quick Pro Searches:</span>
+                {['Boaster', 'Aspas', 'Mirage', 'valyn', 'Chronicle'].map((handle) => (
+                  <button
+                    key={handle}
+                    type="button"
+                    onClick={() => {
+                      setSearch(handle);
+                      executeLiveSearch(handle);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-[#222222] hover:bg-[#2e2e2e] text-[#82EAF4] hover:text-[#A6F4FC] text-[11px] font-medium border border-[#353535] transition-colors"
+                  >
+                    {handle}
+                  </button>
+                ))}
+              </div>
+
+              <div className="text-[11px] text-text-muted flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#262626]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>Active Data Feeds:</span>
+                  <span className="font-mono text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    HenrikDev Riot API (VCT Verified)
+                  </span>
+                  <span className="font-mono text-lilac bg-surface px-2 py-0.5 rounded border border-border">
+                    Valve Steam CS2 API
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#777777]">
+                  Supports Riot IDs (Handle#Tag) & Leaderboard queries
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Live Ingestion Results */}
+          <Card
+            title={`Live Ingestion Results (${liveResults.local.length + liveResults.live.length})`}
+            subtitle="Real-time competitive telemetry normalized across publisher APIs"
+          >
+            {isLiveSearching ? (
+              <div className="py-12 flex flex-col items-center justify-center text-text-muted gap-2">
+                <Loader2 size={28} className="animate-spin text-violet" />
+                <span className="font-mono text-xs text-lilac">Querying Riot Games & Steam Telemetry Indexes...</span>
+              </div>
+            ) : liveResults.local.length === 0 && liveResults.live.length === 0 ? (
+              <div className="py-12 text-center text-text-muted text-xs">
+                Enter a player handle above to query live esports providers.
+              </div>
+            ) : (
+              <div className="overflow-x-auto -mx-5 px-5">
+                <table className="w-full min-w-[700px] text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-border text-text-muted uppercase text-[11px] font-semibold tracking-wider">
+                      <th className="py-2.5 px-3">Player Handle</th>
+                      <th className="py-2.5 px-3">Title & Role</th>
+                      <th className="py-2.5 px-3">Data Provider</th>
+                      <th className="py-2.5 px-3">Matches</th>
+                      <th className="py-2.5 px-3">Verification</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {/* Local Results */}
+                    {liveResults.local.map((p) => (
+                      <tr key={p.id} className="hover:bg-surface/80 transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="font-bold text-text text-sm flex items-center gap-1.5">
+                            {p.name}
+                            {p.is_verified && (
+                              <span className="text-emerald" title="Verified Pro">
+                                <ShieldCheck size={14} />
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] font-mono text-text-muted">ID: {p.id}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-lilac uppercase font-mono text-[11px]">{p.game}</div>
+                          <div className="text-text-muted">{p.role}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded bg-surface border border-violet/30 text-[10px] font-mono text-lilac">
+                            Local Database (Verified)
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-text">{p.matches_played}</td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded bg-emerald/15 border border-emerald/30 text-emerald text-[10px] font-semibold">
+                            Current
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right space-x-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => window.open(`/p/${p.slug || p.id}`, '_blank')}
+                          >
+                            Public Dossier
+                          </Button>
+                          {!p.is_claimed && (
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => setClaimingPlayer({ id: p.id, name: p.name, game: p.game })}
+                            >
+                              Claim
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Live External Results */}
+                    {liveResults.live.map((p) => (
+                      <tr key={p.id} className="hover:bg-surface/80 transition-colors bg-surface-elevated/20">
+                        <td className="py-3 px-3">
+                          <div className="font-bold text-text text-sm flex items-center gap-1.5">
+                            {p.name}
+                            <span className="text-emerald" title="Live Verified Feed">
+                              <ShieldCheck size={14} />
+                            </span>
+                          </div>
+                          <div className="text-[11px] font-mono text-text-muted truncate max-w-[200px]">
+                            {p.external_id}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-lilac uppercase font-mono text-[11px]">{p.game}</div>
+                          <div className="text-text-muted">{p.role} · {p.current_team || p.region}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded bg-violet/20 border border-violet/40 text-[10px] font-mono text-electric capitalize">
+                            {p.provider?.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-text">{p.matches_played}</td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded bg-emerald/15 border border-emerald/30 text-emerald text-[10px] font-semibold">
+                            Live Feed
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right space-x-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => window.open(`/p/${p.name.toLowerCase()}`, '_blank')}
+                          >
+                            Public Dossier
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => setClaimingPlayer({ id: p.id, name: p.name, game: p.game })}
+                          >
+                            Claim
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
 
       {/* CSV Ingestion & Authenticity Modal (PRD §5 User Journey B, F1, F15) */}
       {showImportModal && (
@@ -503,6 +808,16 @@ BadPlayer@Inj,=cmd|' /C calc'!A0,Duelist,50,50,999.0,120.0,-5.0,15.0`;
           </div>
         </div>
       )}
+
+      {claimingPlayer && (
+        <ClaimProfileModal
+          playerId={claimingPlayer.id}
+          playerHandle={claimingPlayer.name}
+          game={claimingPlayer.game}
+          onClose={() => setClaimingPlayer(null)}
+        />
+      )}
     </div>
   );
 };
+

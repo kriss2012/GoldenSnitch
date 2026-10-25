@@ -11,11 +11,12 @@ import {
   CheckCircle,
   ArrowRight,
 } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { TalentBadge } from '../components/common/TalentBadge';
 import { TrendIndicator } from '../components/common/TrendIndicator';
+import { RosterSynergyBreakdown } from '../components/common/charts/RosterSynergyBreakdown';
 import { scoutService } from '../services/scoutService';
 import { Roster, RosterMember } from '../types';
 
@@ -220,20 +221,52 @@ export const RostersPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Trajectory Line Chart */}
-            <Card title="Roster rating progression" subtitle="Historical 6-month competitive trajectory">
+            {/* 1. Tactical Roster Synergy Breakdown */}
+            <RosterSynergyBreakdown
+              rosterName={currentRoster.name}
+              game={currentRoster.game}
+              synergyScore={currentRoster.synergyScore}
+            />
+
+            {/* 2. Trajectory Area Chart */}
+            <Card title="Roster rating progression" subtitle="Historical 6-month competitive trajectory across international stages">
               <div className="h-56 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={currentRoster.historyTrajectory}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3B1A55" />
-                    <XAxis dataKey="month" stroke="#B9A6CC" fontSize={12} />
-                    <YAxis domain={[60, 95]} stroke="#B9A6CC" fontSize={12} />
+                  <AreaChart data={currentRoster.historyTrajectory} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="rosterTrajGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#82EAF4" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#82EAF4" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                    <XAxis dataKey="month" stroke="#6B7280" fontSize={11} tickLine={false} axisLine={{ stroke: '#2A2A2A' }} />
+                    <YAxis domain={[60, 95]} stroke="#6B7280" fontSize={11} tickLine={false} axisLine={{ stroke: '#2A2A2A' }} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#120019', borderColor: '#3B1A55', borderRadius: '8px' }}
-                      itemStyle={{ color: '#F3E8FF', fontSize: '12px' }}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload || !payload.length) return null;
+                        return (
+                          <div className="p-3 bg-[#111111]/95 backdrop-blur-md border border-[#333333] rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.8)] text-xs min-w-[170px] space-y-1">
+                            <span className="font-bold text-[#F5F5F5]">{label} Performance Rating</span>
+                            <div className="flex justify-between items-center pt-1 border-t border-[#222]">
+                              <span className="text-[#8E8E8E]">Competitive Rating:</span>
+                              <span className="font-mono font-bold text-[#82EAF4]">{payload[0].value}</span>
+                            </div>
+                          </div>
+                        );
+                      }}
                     />
-                    <Line type="monotone" dataKey="rating" stroke="#892CDC" strokeWidth={2.5} dot={{ fill: '#892CDC', r: 4 }} />
-                  </LineChart>
+                    <Area
+                      type="monotone"
+                      dataKey="rating"
+                      stroke="#82EAF4"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#rosterTrajGrad)"
+                      dot={{ fill: '#82EAF4', r: 4, stroke: '#0B0B0B', strokeWidth: 2 }}
+                      activeDot={{ r: 6, fill: '#82EAF4' }}
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </Card>

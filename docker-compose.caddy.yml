@@ -1,0 +1,72 @@
+version: '3.8'
+
+# ==============================================================================
+# Golden Snitch — Production Deployment with Caddy (Automatic HTTPS / HTTP-3)
+# ==============================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scoutgrid-caddy-backend
+    expose:
+      - "8000"
+    volumes:
+      - scoutgrid-data:/app/data
+    environment:
+      - APP_ENV=production
+      - DEBUG=false
+      - SCOUTGRID_DB=/app/data/scoutgrid.db
+      - SCOUTGRID_SECRET_KEY=${SCOUTGRID_SECRET_KEY:?Error: SCOUTGRID_SECRET_KEY must be set in production}
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-https://app.goldensnitch.gg}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: scoutgrid-caddy-frontend
+    expose:
+      - "80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: always
+
+  caddy:
+    image: caddy:2.7-alpine
+    container_name: scoutgrid-caddy-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 QUIC
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/usr/share/caddy:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    restart: always
+
+volumes:
+  scoutgrid-data:
+    name: scoutgrid-caddy-data
+  caddy-data:
+    name: scoutgrid-caddy-ssl-data
+  caddy-config:
+    name: scoutgrid-caddy-ssl-config
+
+networks:
+  default:
+    name: scoutgrid-caddy-network

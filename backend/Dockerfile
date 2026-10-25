@@ -1,31 +1,48 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-slim
+# ==============================================================================
+# Golden Snitch — Backend Production Dockerfile
+# ==============================================================================
+
+FROM python:3.12-slim AS runtime
+
+# System environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PORT=8000 \
+    SCOUTGRID_DB=/app/data/scoutgrid.db
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (curl for healthchecks)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install UV or pip dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir fastapi uvicorn pydantic pyjwt cryptography
+# Create dedicated non-root application user
+RUN groupadd -g 1001 scoutgrid && \
+    useradd -u 1001 -g scoutgrid -s /bin/bash -m scoutgrid
 
-# Copy backend source and seed data
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copy application code and seed data
 COPY app/ ./app/
-COPY data/ ./data/
+COPY pyproject.toml .
 
-# Persistent SQLite directory
-RUN mkdir -p /app/data
+# Create persistent database directory and grant permissions to scoutgrid user
+RUN mkdir -p /app/data && chown -R scoutgrid:scoutgrid /app
 
-ENV PYTHONUNBUFFERED=1
-ENV SCOUTGRID_DB=/app/data/scoutgrid.db
-ENV PORT=8000
+# Switch to non-root user
+USER scoutgrid
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/api/v1/health || exit 1
+# Docker Healthcheck
+HEALTHCHECK --interval=20s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Production server command with 2 workers
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

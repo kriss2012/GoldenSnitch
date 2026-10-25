@@ -7,24 +7,35 @@ interface ConfidenceBadgeProps {
 }
 
 export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({ level, className = '' }) => {
-  const getDotColor = () => {
+  const getStyles = () => {
     switch (level) {
       case 'High confidence':
-        return 'bg-success';
+        return {
+          dot: 'bg-[#4EFAAC] shadow-[0_0_6px_#4EFAAC]',
+          text: 'text-[#4EFAAC]',
+        };
       case 'Medium confidence':
-        return 'bg-warning';
+        return {
+          dot: 'bg-[#F5B83D] shadow-[0_0_6px_#F5B83D]',
+          text: 'text-[#F5B83D]',
+        };
       case 'Low confidence':
       default:
-        return 'bg-danger';
+        return {
+          dot: 'bg-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.6)]',
+          text: 'text-rose-400',
+        };
     }
   };
 
+  const { dot, text } = getStyles();
+
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs text-text-muted select-none ${className}`}
+      className={`inline-flex items-center gap-1.5 text-xs select-none ${text} ${className}`}
       title={level}
     >
-      <span className={`w-2 h-2 rounded-full shrink-0 ${getDotColor()}`} aria-hidden="true" />
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} aria-hidden="true" />
       <span className="font-medium whitespace-nowrap">{level}</span>
     </span>
   );

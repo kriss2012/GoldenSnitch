@@ -10,7 +10,37 @@ Golden Snitch is a professional esports operations intelligence platform that ce
 
 ## ⚡ 1-Click Startup
 
-### Backend (FastAPI + SQLite + Auth & Notification Engine)
+### Option A: Windows 1-Click Batch Launcher (Recommended)
+Double-click or run:
+```cmd
+start.bat
+# or
+run.bat
+```
+This will:
+- Check all prerequisites (Python `.venv`, Node.js, `npm`, `.env`, and dependencies).
+- Auto-install missing packages (`npm install`) if needed.
+- Free ports `8000` and `5173` to prevent port collision conflicts.
+- Launch the **FastAPI Backend** (`http://localhost:8000`) and **Vite Frontend** (`http://localhost:5173`) in dedicated labeled windows.
+- Provide a live interactive control dashboard with 1-key actions:
+  - `[B]` Open Web App in Browser
+  - `[D]` Open Swagger Docs in Browser
+  - `[R]` Restart Both Servers
+  - `[S]` Stop All Servers
+  - `[Q]` Exit Launcher
+
+CLI shortcut arguments are also supported:
+```cmd
+start.bat backend    # Start backend only
+start.bat frontend   # Start frontend only
+start.bat stop       # Stop any running servers
+start.bat install    # Install/repair pip & npm packages
+start.bat test       # Run test suite
+```
+
+### Option B: Manual Startup
+
+#### Backend (FastAPI + SQLite + Auth & Notification Engine)
 From the repository root:
 ```bash
 # Using project Python virtual environment:
@@ -88,8 +118,8 @@ The platform features a persistent notification center backed by SQLite (`notifi
 ## 🧪 Automated Testing & Verification Gate
 
 ```bash
-# Run complete backend test suite (36 passing tests across auth, rate limiting, notifications, engine, API, and PRD scenarios)
-.\.venv\Scripts\python.exe -m pytest backend/tests/
+# Run complete backend test suite (62 passing tests across LAN model training, adversarial QA, auth, notifications, scoring engine, PRD worked examples, live telemetry, and production readiness)
+.\.venv\Scripts\python.exe -m pytest backend/tests/ -v
 
 # Verify 100% clean code quality (zero lint errors)
 .\.venv\Scripts\ruff.exe check backend/app/
@@ -103,17 +133,93 @@ cd frontend && npm run build
 
 ---
 
-## 🐳 Containerization & Production Deployment
+## 🎯 Empirical Model Training & Tournament Telemetry
 
-The platform provides complete multi-container Docker and Docker Compose orchestration:
+- **Trained Dataset:** [`Valo_Lan_Stats_10_Matches.xlsx`](Valo_Lan_Stats_10_Matches.xlsx) (10 LAN tournament match sheets, 1,600 match observations, 156 international pro competitors).
+- **Trained Model Artifact:** [`backend/app/models/valorant_lan_trained_model.json`](backend/app/models/valorant_lan_trained_model.json).
+- **Calibrated Empirical Normalization:**
+  - **ACS:** Median `190.6` | p5: `101.4` | p95: `301.1`
+  - **K/D Ratio:** Median `0.94` | p5: `0.48` | p95: `1.76`
+  - **KDA:** Median `1.29` | p5: `0.70` | p95: `2.29`
+  - **Kills / Map:** Median `14.0` | p5: `7.0` | p95: `22.67`
+  - **Deaths / Map:** Median `15.0` | p5: `9.67` | p95: `20.50`
+  - **Assists / Map:** Median `5.0` | p5: `1.33` | p95: `9.67`
+- **Trained Model API:** `GET /api/v1/models/valorant-lan`
+- **Re-training & Ingestion Script:** `python scripts/train_valorant_lan_data.py`
+
+---
+
+## 🏆 Autonomous QA System & Release Certification
+
+Comprehensive audit and defect remediation reports are available in [`docs/qa/`](docs/qa/):
+- **[QA Master Plan](docs/qa/QA_MASTER_PLAN.md)**: End-to-end testing strategy, safety rules, and operating cycles.
+- **[Baseline Results](docs/qa/BASELINE_RESULTS.md)**: Pre-test system inventory and benchmark baselines.
+- **[Defect Register](docs/qa/DEFECT_REGISTER.md)**: Traceable register for all 6 discovered defects (DEF-001 through DEF-006) with root causes and closure evidence.
+- **[Security Findings](docs/qa/SECURITY_FINDINGS.md)**: Risk-based OWASP security evaluation (SEC-001 through SEC-008).
+- **[UI Interaction Matrix](docs/qa/UI_INTERACTION_MATRIX.md)**: Exhaustive component and form interaction audit.
+- **[Responsive Test Results](docs/qa/RESPONSIVE_TEST_RESULTS.md)**: Verified 14-viewport responsive matrix (320px–1920px) with 0 unhandled horizontal overflow.
+- **[API Test Results](docs/qa/API_TEST_RESULTS.md)**: Complete endpoint contract inventory, HTTP methods, RBAC schemas, and negative test results.
+- **[Performance Results](docs/qa/PERFORMANCE_RESULTS.md)**: Response latencies (< 8.5ms median), database concurrency (> 2,400 qps), and Web Vitals.
+- **[Accessibility Results](docs/qa/ACCESSIBILITY_RESULTS.md)**: WCAG 2.1 Level AA compliance, color contrast ratios (> 5:1), and modal focus traps.
+- **[Release Readiness Certification](docs/qa/RELEASE_READINESS.md)**: Official release scorecard: **CONTROLLED BETA READY / PRODUCTION CANDIDATE**.
+
+---
+
+## 🌐 Live Esports Telemetry & Public Sharing Features
+
+1. **Live Data Providers (`/data-sources`):**
+   - **Riot Games / HenrikDev Valorant API:** Ingests live PUUID, Combat ACS, KAST %, ADR, HS %, and VCT match history with rate-limit and cache protection.
+   - **Valve Steam CS2 Provider:** Resolves SteamID64, Premier Skill Rating, ADR, and weapon accuracy splits.
+   - **Provider Manager:** Tracks provider health, auto-backs off upon rate limits, and preserves last-known telemetry with explicit staleness and provenance metadata.
+2. **Public Player Dossiers (`/p/:slug`, `/players/:game/:handle`):**
+   - Stable unauthenticated public URLs optimized for player sharing and mobile viewing.
+   - Verified badge indicator, claim verification workflow (`ClaimProfileModal`), and voluntary recruitment preferences.
+3. **Cryptographically Secure Shareable Reports (`/reports/shared/:shareToken`):**
+   - High-entropy share tokens (`secrets.token_urlsafe(32)`) allowing organizations to share scouting dossiers externally.
+   - Instant revocation and expiration timestamps.
+4. **Professional Organizations & Staff RBAC (`/organization`):**
+   - Multi-roster staff management with fine-grained permissions (`ROLE_OWNER`, `ROLE_ADMIN`, `ROLE_MANAGER`, `ROLE_COACH`, `ROLE_SCOUT`, `ROLE_ANALYST`, `ROLE_PLAYER`).
+   - Secure tokenized team invitations with expiration and acceptance workflow.
+5. **GDPR Data Rights & Security Settings (`/settings`):**
+   - Self-service **Change Password** with server-side validation and immediate token revocation.
+   - **Download My Data (JSON)** archive (`GET /api/v1/users/me/export`).
+   - **Permanent Account Deletion** (`DELETE /api/v1/users/me`) with cascade cleanup.
+6. **Data Dispute & Correction Workflow (`/terms`, `/privacy`):**
+   - Formal data correction requests (`POST /api/v1/players/{id}/correction-requests`) for competitors or scouts reporting metric inaccuracies, outdated team affiliations, or impersonation.
+
+---
+
+## 📚 System Documentation Suite
+
+Detailed production specifications and manuals are available in `/docs`:
+- **[Production Readiness Audit](docs/production-readiness-audit.md)**: Prioritized defects and completed resolutions.
+- **[System Architecture](docs/architecture.md)**: Frontend, backend, database schema, and communication contracts.
+- **[Data Providers Manual](docs/data-providers.md)**: API credentials, rate limits, caching, and normalization.
+- **[Scouting Methodology](docs/scouting-methodology.md)**: GTI formulas, weight vectors, and sample size confidence.
+- **[Security & Privacy](docs/security-and-privacy.md)**: PBKDF2 hashing, JWT revocation, RBAC, and GDPR workflows.
+- **[Automated Testing Guide](docs/testing.md)**: Complete test cases and verification procedures.
+- **[Production Deployment](docs/deployment.md)**: Hardened Docker, NGINX, and Caddy reverse proxy guides.
+- **[Backup & Disaster Recovery](docs/backup-and-recovery.md)**: SQLite online snapshots, restore verification, RPO/RTO.
+- **[Operations Runbook](docs/operations-runbook.md)**: Health monitoring (`/health`), alert triage, and admin tasks.
+- **[Player Identity & Verification](docs/player-identity-and-verification.md)**: Claim lifecycle, Steam/OAuth workflows.
+- **[Public Profiles & Sharing](docs/public-profiles-and-sharing.md)**: Share previews and token revocation.
+- **[Organization Permissions](docs/organization-permissions.md)**: Multi-roster access control and invitation lifecycles.
+
+---
+
+## 🐳 Containerization & Reverse Proxy Stacks
+
+The platform provides complete multi-container Docker, NGINX, and Caddy orchestration:
 
 ```bash
-# Build and run backend + frontend services with automatic SQLite volume persistence
+# 1. Local Unified Stack (Frontend on 3000, Backend on 8000)
 docker compose up --build -d
 
-# Check service health and logs
-docker compose ps
-docker compose logs -f
+# 2. Production NGINX Reverse Proxy Stack (Edge TLS, rate limiting, gzip)
+docker compose -f docker-compose.prod.yml up --build -d
+
+# 3. Production Caddy Stack (Automatic HTTPS & HTTP/3)
+docker compose -f docker-compose.caddy.yml up --build -d
 ```
 
 - **Frontend Application (Nginx SPA):** `http://localhost:3000/`

@@ -28,6 +28,18 @@ GAMES = {
         "squad": {"Entry Fragger": 1, "AWPer": 1, "Support": 2, "Lurker": 1},
         "roles": ["Entry Fragger", "AWPer", "Support", "Lurker"],
     },
+    "lol": {
+        "code": "lol",
+        "name": "League of Legends",
+        "squad": {"Top": 1, "Jungle": 1, "Mid": 1, "ADC": 1, "Support": 1},
+        "roles": ["Top", "Jungle", "Mid", "ADC", "Support"],
+    },
+    "dota2": {
+        "code": "dota2",
+        "name": "Dota 2",
+        "squad": {"Carry": 1, "Mid": 1, "Offlane": 1, "Support4": 1, "HardSupport5": 1},
+        "roles": ["Carry", "Mid", "Offlane", "Support4", "HardSupport5"],
+    },
 }
 
 # Role Metric Profiles for Golden Snitch (Valorant & CS2):

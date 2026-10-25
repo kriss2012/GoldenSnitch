@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Compass,
@@ -10,8 +10,13 @@ import {
   BookmarkCheck,
   FileText,
   Settings,
+  Building2,
+  Database,
+  Crosshair,
   X
 } from 'lucide-react';
+
+import { GoldenSnitchLogo } from '../common/GoldenSnitchLogo';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,50 +25,49 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { path: '/scouting', label: 'Scout players', icon: Compass },
-  { path: '/players', label: 'Player database', icon: Users },
-  { path: '/compare', label: 'Compare players', icon: Scale },
-  { path: '/rosters', label: 'Rosters', icon: Shield },
-  { path: '/synergy', label: 'Team synergy', icon: Zap },
-  { path: '/watchlist', label: 'Watchlist', icon: BookmarkCheck },
-  { path: '/reports', label: 'Reports', icon: FileText },
-  { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/app/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { path: '/app/scouting', label: 'Scout Players', icon: Compass },
+  { path: '/app/players', label: 'Player Database', icon: Users },
+  { path: '/app/compare', label: 'Comparison', icon: Scale },
+  { path: '/app/rosters', label: 'Rosters & Vacancies', icon: Shield },
+  { path: '/app/synergy', label: 'Roster Synergy', icon: Zap },
+  { path: '/app/watchlist', label: 'Watchlist', icon: BookmarkCheck },
+  { path: '/app/reports', label: 'Scouting Reports', icon: FileText },
+  { path: '/app/organization', label: 'Organization', icon: Building2 },
+  { path: '/app/data-sources', label: 'Data Sources & LAN', icon: Database },
+  { path: '/app/settings', label: 'Settings', icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile = false }) => {
   const content = (
     <aside
-      className={`h-full flex flex-col bg-surface border-r border-border transition-all duration-200 select-none ${isMobile ? 'w-72 shadow-2xl z-50' : 'w-64'
-        }`}
+      className={`h-full flex flex-col bg-[#101010] border-r border-[#353535] transition-all duration-200 select-none ${
+        isMobile ? 'w-72 shadow-2xl z-50' : 'w-64'
+      }`}
     >
       {/* Brand Header */}
-      <div className="h-16 px-5 flex items-center justify-between border-b border-border shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-control bg-gradient-to-br from-violet via-[#892cdc] to-[#5662f6] p-[1.5px] shadow-[0_0_16px_rgba(155,48,255,0.45)] shrink-0">
-            <div className="w-full h-full bg-[#18002e] rounded-[7px] flex items-center justify-center">
-              <Zap size={20} className="text-lilac fill-violet/40 drop-shadow-[0_0_8px_rgba(155,48,255,0.8)]" />
-            </div>
-          </div>
+      <div className="h-16 px-4 flex items-center justify-between border-b border-[#353535] shrink-0">
+        <Link to="/app/dashboard" className="flex items-center gap-2.5 min-w-0">
+          <GoldenSnitchLogo size={36} layout="icon-only" />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-extrabold tracking-tight text-text font-heading leading-none truncate">
-                Golden Snitch
+              <h1 className="text-base font-black italic tracking-tight text-[#F5F5F5] font-heading leading-none truncate">
+                <span className="text-[#F5B83D]">GOLDEN</span> SNITCH
               </h1>
-              <span className="px-1.5 py-0.2 text-[9px] font-mono font-bold bg-violet/25 text-lilac border border-violet/50 rounded-full shadow-[0_0_8px_rgba(155,48,255,0.3)]">
+              <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-[#82EAF4]/15 text-[#82EAF4] border border-[#82EAF4]/40 rounded-full">
                 PRO
               </span>
             </div>
-            <span className="text-[10px] text-lilac/90 font-semibold tracking-wider uppercase block mt-0.5">
+            <span className="text-[10px] text-[#B8B8B8] font-semibold tracking-wider uppercase block mt-0.5">
               Esports Intelligence
             </span>
           </div>
-        </div>
+        </Link>
 
         {isMobile && (
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-text rounded-control focus-visible:outline-lilac"
+            className="w-9 h-9 flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-xl hover:bg-[#2B2B2B] transition-colors"
             aria-label="Close navigation"
           >
             <X size={20} />
@@ -81,28 +85,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile = fa
               to={item.path}
               onClick={isMobile ? onClose : undefined}
               className={({ isActive }) => `
-                flex items-center gap-3 px-3.5 py-2.5 rounded-control text-sm font-medium transition-colors duration-140 min-h-[40px]
+                relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 min-h-[42px]
                 ${isActive
-                  ? 'bg-plum text-text border-l-2 border-violet'
-                  : 'text-text-muted hover:text-text hover:bg-surface/80'
+                  ? 'bg-[#2B2B2B] text-[#82EAF4] border border-[#82EAF4]/30 font-semibold shadow-[0_0_12px_rgba(130,234,244,0.15)]'
+                  : 'text-[#B8B8B8] hover:text-[#F5F5F5] hover:bg-[#242424]'
                 }
               `}
             >
-              <Icon size={18} className="shrink-0" />
-              <span>{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#82EAF4]" />
+                  )}
+                  <Icon size={18} className="shrink-0" />
+                  <span>{item.label}</span>
+                </>
+              )}
             </NavLink>
           );
         })}
       </nav>
 
       {/* System Status Footer */}
-      <div className="p-4 border-t border-border shrink-0 text-xs text-text-muted flex items-center justify-between bg-[#110022]">
+      <div className="p-4 border-t border-[#353535] shrink-0 text-xs text-[#B8B8B8] flex items-center justify-between bg-[#0B0B0B]/80">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-violet animate-pulse shadow-[0_0_8px_rgba(155,48,255,0.8)]" />
-          <span className="font-mono text-[11px] text-text font-medium">GS v2.0 · Live Hub</span>
+          <span className="w-2 h-2 rounded-full bg-[#82EAF4] animate-pulse shadow-[0_0_8px_rgba(130,234,244,0.9)]" />
+          <span className="font-mono text-[11px] text-[#F5F5F5] font-medium">10 VCT LAN Stages</span>
         </div>
-        <span className="text-[10px] font-mono text-lilac tracking-wider uppercase font-semibold">
-          Broadcast Night
+        <span className="text-[10px] font-mono text-[#82EAF4] tracking-wider uppercase font-semibold">
+          Live Sync
         </span>
       </div>
     </aside>
@@ -113,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, isMobile = fa
     return (
       <div className="fixed inset-0 z-50 flex">
         <div
-          className="fixed inset-0 bg-void/80 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-[#0B0B0B]/80 backdrop-blur-sm transition-opacity"
           onClick={onClose}
           aria-hidden="true"
         />

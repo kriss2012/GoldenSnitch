@@ -28,28 +28,28 @@ export function getTalentBadgeClasses(score: number): { bg: string; text: string
   const s = Math.max(0, Math.min(100, score || 0));
   if (s < 40) {
     return {
-      bg: 'bg-plum border border-border',
-      text: 'text-text',
+      bg: 'bg-[#242424] border border-[#353535]',
+      text: 'text-[#B8B8B8] font-medium',
       label: 'Developing',
     };
   }
   if (s < 60) {
     return {
-      bg: 'bg-violet shadow-[0_0_10px_rgba(155,48,255,0.4)]',
-      text: 'text-white font-semibold',
+      bg: 'bg-[#F5B83D] shadow-[0_0_14px_rgba(245,184,61,0.6)]',
+      text: 'text-black font-bold',
       label: 'Starter',
     };
   }
   if (s < 75) {
     return {
-      bg: 'bg-lilac shadow-[0_0_12px_rgba(209,135,255,0.5)]',
-      text: 'text-black font-bold',
+      bg: 'bg-[#82EAF4] shadow-[0_0_16px_rgba(130,234,244,0.8)]',
+      text: 'text-black font-black',
       label: 'Elite',
     };
   }
   return {
-    bg: 'bg-text shadow-[0_0_14px_rgba(255,255,255,0.6)]',
-    text: 'text-black font-extrabold',
+    bg: 'bg-white shadow-[0_0_18px_rgba(255,255,255,0.85)]',
+    text: 'text-black font-black',
     label: 'Franchise',
   };
 }

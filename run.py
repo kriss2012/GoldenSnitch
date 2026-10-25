@@ -23,11 +23,6 @@ def main():
     print(f"[*] Interactive API    : http://localhost:8000/docs")
     print(f"[*] Vite Dev Mode      : cd frontend && npm run dev (http://localhost:5173/)")
     print("=" * 65)
-    print("Demo Accounts:")
-    print(" - Maya Lin (GM)           : username 'maya'  / password 'admin123'")
-    print(" - Dev Sharma (Head Coach) : username 'dev'   / password 'coach123'")
-    print(" - Arjun Patel (Scout)     : username 'arjun' / password 'scout123'")
-    print("=" * 65)
     print("\nPress Ctrl+C to stop server.\n")
 
     cmd = [py_bin, "-m", "uvicorn", "backend.app.main:app", "--reload", "--port", "8000"]

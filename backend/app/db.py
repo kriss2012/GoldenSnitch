@@ -11,9 +11,13 @@ def db_path():
 
 def connect():
     Path(db_path()).parent.mkdir(parents=True, exist_ok=True)
-    c = sqlite3.connect(db_path())
+    c = sqlite3.connect(db_path(), timeout=15.0)
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA foreign_keys=ON")
+    c.execute("PRAGMA journal_mode=WAL")
+    c.execute("PRAGMA synchronous=NORMAL")
+    c.execute("PRAGMA cache_size=-64000")
+    c.execute("PRAGMA temp_store=MEMORY")
     return c
 
 SCHEMA = """
@@ -24,12 +28,16 @@ CREATE TABLE IF NOT EXISTS games(
 
 CREATE TABLE IF NOT EXISTS users(
   id TEXT PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
+  org TEXT NOT NULL DEFAULT 'Logic Legend Esports',
+  organization TEXT NOT NULL DEFAULT 'Logic Legend Esports',
   name TEXT NOT NULL,
-  role TEXT NOT NULL,
-  organization TEXT NOT NULL,
-  salt TEXT NOT NULL,
-  password_hash TEXT NOT NULL
+  email TEXT UNIQUE,
+  username TEXT UNIQUE,
+  password_hash TEXT NOT NULL,
+  salt TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'ROLE_SCOUT',
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS data_sources(
@@ -162,23 +170,164 @@ CREATE TABLE IF NOT EXISTS watchlist_entries(
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, player_id)
 );
+
+CREATE TABLE IF NOT EXISTS external_providers(
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  supported_games TEXT NOT NULL,
+  base_url TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'healthy',
+  rate_limit_rpm INTEGER DEFAULT 60,
+  last_health_check TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS player_identities(
+  id TEXT PRIMARY KEY,
+  player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  provider_name TEXT NOT NULL,
+  external_id TEXT NOT NULL,
+  handle_at_source TEXT NOT NULL,
+  verified INTEGER NOT NULL DEFAULT 0,
+  freshness_status TEXT NOT NULL DEFAULT 'current',
+  last_synced_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  raw_metadata TEXT DEFAULT '{}',
+  UNIQUE(provider_name, external_id)
+);
+CREATE INDEX IF NOT EXISTS idx_player_identities_player ON player_identities(player_id);
+
+CREATE TABLE IF NOT EXISTS public_profiles(
+  id TEXT PRIMARY KEY,
+  player_id TEXT NOT NULL UNIQUE REFERENCES players(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL UNIQUE,
+  is_public INTEGER NOT NULL DEFAULT 1,
+  bio TEXT DEFAULT '',
+  social_links TEXT DEFAULT '{}',
+  verified_badge INTEGER NOT NULL DEFAULT 0,
+  claimed_by_user_id TEXT REFERENCES users(id),
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_public_profiles_slug ON public_profiles(slug);
+
+CREATE TABLE IF NOT EXISTS profile_claims(
+  id TEXT PRIMARY KEY,
+  player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  verification_method TEXT NOT NULL,
+  verification_code TEXT,
+  evidence_text TEXT DEFAULT '',
+  reviewed_by TEXT REFERENCES users(id),
+  reviewed_at TEXT,
+  rejection_reason TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_profile_claims_user ON profile_claims(user_id);
+CREATE INDEX IF NOT EXISTS idx_profile_claims_status ON profile_claims(status);
+
+CREATE TABLE IF NOT EXISTS organizations(
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  slug TEXT NOT NULL UNIQUE,
+  tag TEXT NOT NULL,
+  logo_url TEXT,
+  description TEXT DEFAULT '',
+  owner_id TEXT NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS organization_members(
+  id TEXT PRIMARY KEY,
+  organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'scout',
+  joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(organization_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS organization_invitations(
+  id TEXT PRIMARY KEY,
+  organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'scout',
+  token TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  expires_at INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shared_reports(
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  candidate_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  roster_id INTEGER REFERENCES rosters(id),
+  share_token TEXT NOT NULL UNIQUE,
+  is_public INTEGER NOT NULL DEFAULT 1,
+  is_revoked INTEGER NOT NULL DEFAULT 0,
+  expires_at INTEGER,
+  created_by TEXT NOT NULL REFERENCES users(id),
+  payload TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_shared_reports_token ON shared_reports(share_token);
+
+CREATE TABLE IF NOT EXISTS data_correction_requests(
+  id TEXT PRIMARY KEY,
+  player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  user_id TEXT REFERENCES users(id),
+  issue_type TEXT NOT NULL,
+  description TEXT NOT NULL,
+  evidence_url TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  reviewed_by TEXT REFERENCES users(id),
+  reviewed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_correction_requests_player ON data_correction_requests(player_id);
+CREATE INDEX IF NOT EXISTS idx_correction_requests_status ON data_correction_requests(status);
+CREATE INDEX IF NOT EXISTS idx_players_game_role ON players(game, role);
+CREATE INDEX IF NOT EXISTS idx_players_game_id ON players(game, id);
+CREATE INDEX IF NOT EXISTS idx_matches_player_date ON matches(player_id, id DESC);
+CREATE INDEX IF NOT EXISTS idx_match_history_player ON match_history(player_id, idx);
+CREATE INDEX IF NOT EXISTS idx_roster_members_roster ON roster_members(roster_id);
+CREATE INDEX IF NOT EXISTS idx_watchlist_user ON watchlist_entries(user_id);
+CREATE INDEX IF NOT EXISTS idx_org_members_lookup ON organization_members(organization_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_annotations_player ON annotations(player_id);
 """
+
 
 def init(conn):
     conn.executescript(SCHEMA)
+    from .db_core_schema import init_core_schema
+    init_core_schema(conn)
     for code, g in GAMES.items():
         conn.execute("INSERT OR IGNORE INTO games(code,name) VALUES(?,?)", (code, g["name"]))
     
-    # Initialize default users in database
-    default_users_data = [
-        ("USR-001", "maya", "Maya Lin", "ROLE_GM", "Logic Legend Esports", "d4a8e6f1a9b2c3d4", "cb2411e72e0bf32a5dfae70b80ba8d2bcfbf5fec0db6a54101e4ecba0bb51fc9"),
-        ("USR-002", "dev", "Dev Sharma", "ROLE_COACH", "Logic Legend Esports", "e1f2a3b4c5d6e7f8", "3e9b068da6c1e309cb936ea4aaae7e35bcfbeab9f6f6630f9a5d45d8b2d4fef6"),
-        ("USR-003", "arjun", "Arjun Patel", "ROLE_SCOUT", "Logic Legend Esports", "a9b8c7d6e5f4a3b2", "310344d2d46e3e1be22a6113b5a19ef47e452145bfeae21262d989f6b9ce0552"),
+    # Dynamic column migrations for users table
+    try:
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+        if "email" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN email TEXT")
+        if "org" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN org TEXT NOT NULL DEFAULT 'Logic Legend Esports'")
+        if "active" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+        if "created_at" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN created_at TEXT DEFAULT ''")
+    except Exception:
+        pass
+
+    # Base system user accounts for foreign key consistency (generic role titles)
+    from .auth import hash_password as legacy_hash
+    base_users = [
+        ("USR-001", "Logic Legend Esports", "Logic Legend Esports", "General Manager", "gm@goldensnitch.gg", "maya", legacy_hash("admin123", "d4a8e6f1a9b2c3d4")[0], "d4a8e6f1a9b2c3d4", "ROLE_GM", 1),
+        ("USR-002", "Logic Legend Esports", "Logic Legend Esports", "Head Coach", "coach@goldensnitch.gg", "dev", legacy_hash("coach123", "e1f2a3b4c5d6e7f8")[0], "e1f2a3b4c5d6e7f8", "ROLE_COACH", 1),
+        ("USR-003", "Logic Legend Esports", "Logic Legend Esports", "Talent Scout", "scout@goldensnitch.gg", "arjun", legacy_hash("scout123", "a9b8c7d6e5f4a3b2")[0], "a9b8c7d6e5f4a3b2", "ROLE_SCOUT", 1),
     ]
-    for uid, uname, name, role, org, salt, pw_hash in default_users_data:
+    for uid, org, organization, name, email, uname, pw_hash, salt, role, active in base_users:
         conn.execute(
-            "INSERT OR IGNORE INTO users(id, username, name, role, organization, salt, password_hash) VALUES(?,?,?,?,?,?,?)",
-            (uid, uname, name, role, org, salt, pw_hash)
+            "INSERT OR IGNORE INTO users(id, org, organization, name, email, username, password_hash, salt, role, active) VALUES(?,?,?,?,?,?,?,?,?,?)",
+            (uid, org, organization, name, email, uname, pw_hash, salt, role, active)
         )
     
     # Seed initial realistic notifications for Maya (GM) if none exist
@@ -194,6 +343,51 @@ def init(conn):
             "INSERT OR IGNORE INTO notifications(id, user_id, type, title, message, resource_type, resource_id, is_read, created_at) VALUES(?,?,?,?,?,?,?,?,?)",
             sample_notifs
         )
+
+    # Seed official external data providers
+    providers = [
+        ("henrik_valorant", "HenrikDev Valorant API", json.dumps(["valorant"]), "https://api.henrikdev.xyz/valorant", "healthy", 60),
+        ("steam_cs2", "Valve Steam CS2 API", json.dumps(["cs2"]), "https://api.steampowered.com/ISteamUserStats", "healthy", 100),
+        ("pandascore", "PandaScore Esports API", json.dumps(["valorant", "cs2", "lol"]), "https://api.pandascore.co", "healthy", 30),
+        ("liquipedia", "Liquipedia Open Archives", json.dumps(["valorant", "cs2", "lol", "dota2"]), "https://liquipedia.net/api", "healthy", 20),
+    ]
+    conn.executemany(
+        "INSERT OR IGNORE INTO external_providers(id, name, supported_games, base_url, status, rate_limit_rpm) VALUES(?,?,?,?,?,?)",
+        providers
+    )
+
+    # Seed default organization (Sentinels Operations)
+    conn.execute(
+        "INSERT OR IGNORE INTO organizations(id, name, slug, tag, description, owner_id) VALUES(?,?,?,?,?,?)",
+        ("ORG-001", "Sentinels Operations", "sentinels", "SEN", "Championship multi-title esports organization competing in VCT Americas.", "USR-001")
+    )
+    # Seed organization members
+    conn.execute("INSERT OR IGNORE INTO organization_members(id, organization_id, user_id, role) VALUES('MEM-001', 'ORG-001', 'USR-001', 'owner')")
+    conn.execute("INSERT OR IGNORE INTO organization_members(id, organization_id, user_id, role) VALUES('MEM-002', 'ORG-001', 'USR-002', 'coach')")
+    conn.execute("INSERT OR IGNORE INTO organization_members(id, organization_id, user_id, role) VALUES('MEM-003', 'ORG-001', 'USR-003', 'scout')")
+
+    # Seed public profiles & external identities if benchmark players exist in players table
+    if conn.execute("SELECT id FROM players WHERE id='VAL-002'").fetchone():
+        public_seeds = [
+            ("PUB-001", "VAL-002", "mirage", 1, "Elite VCT Controller & Certified In-Game Leader. Proven smoke timings and high mid-round tactical adaptability.", json.dumps({"twitter": "@mirage_val", "tracker": "mirage#VCT"}), 1),
+            ("PUB-002", "VAL-003", "voltz", 1, "High combat impact entry & controller hybrid. Frag specialist with aggressive first-contact dueling.", json.dumps({"twitter": "@voltz_fps", "tracker": "voltz#NA1"}), 0),
+            ("PUB-003", "VAL-001", "tenz", 1, "World champion VCT Americas Duelist. Elite mechanical precision and fast rotation anchoring.", json.dumps({"twitter": "@tenzofficial", "twitch": "tenz"}), 1),
+        ]
+        conn.executemany(
+            "INSERT OR IGNORE INTO public_profiles(id, player_id, slug, is_public, bio, social_links, verified_badge) VALUES(?,?,?,?,?,?,?)",
+            public_seeds
+        )
+
+        identities = [
+            ("IDN-001", "VAL-002", "henrik_valorant", "riot_puuid_mirage_sentinels_002", "Mirage#VCT", 1, "current"),
+            ("IDN-002", "VAL-003", "henrik_valorant", "riot_puuid_voltz_na1_003", "Voltz#NA1", 0, "current"),
+            ("IDN-003", "VAL-001", "henrik_valorant", "riot_puuid_tenz_sentinels_001", "TenZ#NA1", 1, "current"),
+        ]
+        conn.executemany(
+            "INSERT OR IGNORE INTO player_identities(id, player_id, provider_name, external_id, handle_at_source, verified, freshness_status) VALUES(?,?,?,?,?,?,?)",
+            identities
+        )
+
     conn.commit()
 
 def load_players(conn, game=None):
@@ -213,7 +407,14 @@ def load_players(conn, game=None):
     rostered = {r["player_id"]: (r["roster_id"], r["slot_role"]) for r in conn.execute("SELECT * FROM roster_members")}
     out = []
     for r in rows:
-        m, pv = json.loads(r["metrics"]), json.loads(r["provenance"])
+        try:
+            m = json.loads(r["metrics"]) if isinstance(r["metrics"], str) else (r["metrics"] or {})
+        except Exception:
+            m = {}
+        try:
+            pv = json.loads(r["provenance"]) if isinstance(r["provenance"], str) else (r["provenance"] or {})
+        except Exception:
+            pv = {"source": r["provenance"]} if r["provenance"] else {}
         h = hist.get(r["id"], [])
         sd, slope = derive_history_metrics(h)
         if sd is not None and "rating_stdev" not in m:
@@ -255,12 +456,19 @@ def load_players(conn, game=None):
 def load_player_matches(conn, player_id=None, limit=20):
     if player_id:
         rows = conn.execute(
-            "SELECT * FROM matches WHERE player_id=? ORDER BY id DESC LIMIT ?",
+            """SELECT m.*, p.name AS player_name, p.role AS player_role, p.game AS player_game
+               FROM matches m
+               LEFT JOIN players p ON m.player_id = p.id
+               WHERE m.player_id=?
+               ORDER BY m.id DESC LIMIT ?""",
             (player_id, limit)
         ).fetchall()
     else:
         rows = conn.execute(
-            "SELECT * FROM matches ORDER BY id DESC LIMIT ?",
+            """SELECT m.*, p.name AS player_name, p.role AS player_role, p.game AS player_game
+               FROM matches m
+               LEFT JOIN players p ON m.player_id = p.id
+               ORDER BY m.id DESC LIMIT ?""",
             (limit,)
         ).fetchall()
     return [dict(r) for r in rows]
@@ -314,10 +522,36 @@ def get_user_by_username(conn, username):
     row = conn.execute("SELECT id, username, name, role, organization, salt, password_hash FROM users WHERE LOWER(username)=LOWER(?)", (username.strip(),)).fetchone()
     return dict(row) if row else None
 
-def create_user(conn, user_id, username, name, role, organization, salt, password_hash):
+def create_user(conn, user_id, *args, **kwargs):
+    if len(args) == 6:
+        username, name, role, organization, salt, password_hash = args
+        email = f"{username.strip()}@goldensnitch.gg" if "@" not in username else username.strip()
+        org = organization.strip()
+    elif len(args) >= 4:
+        org = args[0].strip()
+        organization = org
+        name = args[1].strip()
+        email = args[2].strip()
+        username = email.split("@")[0]
+        password_hash = args[3]
+        salt = kwargs.get("salt", "")
+        role = args[4] if len(args) > 4 else kwargs.get("role", "ROLE_SCOUT")
+    else:
+        username = kwargs.get("username", kwargs.get("email", "")).split("@")[0]
+        name = kwargs.get("name", "")
+        role = kwargs.get("role", "ROLE_SCOUT")
+        org = kwargs.get("org", kwargs.get("organization", "Logic Legend Esports"))
+        organization = org
+        salt = kwargs.get("salt", "")
+        password_hash = kwargs.get("password_hash", "")
+        email = kwargs.get("email", f"{username}@goldensnitch.gg")
+
+    clean_email = email.strip().lower() if email else ""
+    clean_username = username.strip().lower() if username else clean_email.split("@")[0]
+
     conn.execute(
-        "INSERT INTO users(id, username, name, role, organization, salt, password_hash) VALUES(?,?,?,?,?,?,?)",
-        (user_id, username.strip(), name.strip(), role, organization.strip(), salt, password_hash)
+        "INSERT INTO users(id, username, name, role, organization, org, email, salt, password_hash, active) VALUES(?,?,?,?,?,?,?,?,?,1)",
+        (user_id, clean_username, name.strip(), role, organization, org, clean_email, salt, password_hash)
     )
     conn.commit()
     return get_user_by_id(conn, user_id)
@@ -395,5 +629,327 @@ def remove_from_watchlist(conn, entry_id, user_id):
     cur = conn.execute("DELETE FROM watchlist_entries WHERE id=? AND user_id=?", (entry_id, user_id))
     conn.commit()
     return cur.rowcount > 0
+
+# ---------- Public Profiles & Sharing Helpers (PRD-PUB-001) ----------
+def get_public_profile(conn, slug_or_id):
+    row = conn.execute(
+        """SELECT pub.*, p.name, p.name as handle, p.game, p.role, p.matches_played, p.metrics,
+                  p.provenance, p.availability, p.language, u.name as claimed_by_name
+           FROM public_profiles pub
+           JOIN players p ON pub.player_id = p.id
+           LEFT JOIN users u ON pub.claimed_by_user_id = u.id
+           WHERE (pub.slug = ? OR pub.player_id = ?) AND pub.is_public = 1""",
+        (slug_or_id, slug_or_id)
+    ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["metrics"] = json.loads(d["metrics"])
+    d["provenance"] = json.loads(d["provenance"])
+    d["social_links"] = json.loads(d["social_links"]) if d.get("social_links") else {}
+    return d
+
+def upsert_public_profile(conn, player_id, slug, is_public=1, bio="", social_links=None):
+    links_json = json.dumps(social_links or {})
+    pub_id = f"PUB-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        """INSERT INTO public_profiles(id, player_id, slug, is_public, bio, social_links, updated_at)
+           VALUES(?,?,?,?,?,?, CURRENT_TIMESTAMP)
+           ON CONFLICT(player_id) DO UPDATE SET
+             slug=excluded.slug,
+             is_public=excluded.is_public,
+             bio=excluded.bio,
+             social_links=excluded.social_links,
+             updated_at=CURRENT_TIMESTAMP""",
+        (pub_id, player_id, slug, is_public, bio, links_json)
+    )
+    conn.commit()
+    return get_public_profile(conn, slug)
+
+# ---------- Profile Claims & Ownership Helpers (PRD-CLAIM-001) ----------
+def create_profile_claim(conn, player_id, user_id, verification_method, verification_code, evidence_text=""):
+    claim_id = f"CLM-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        """INSERT INTO profile_claims(id, player_id, user_id, status, verification_method, verification_code, evidence_text)
+           VALUES(?,?,?,'pending',?,?,?)""",
+        (claim_id, player_id, user_id, verification_method, verification_code, evidence_text)
+    )
+    conn.commit()
+    return claim_id
+
+def list_profile_claims(conn, user_id=None, status=None):
+    query = """SELECT c.*, p.name as player_handle, p.game, u.name as applicant_name, u.username as applicant_username
+               FROM profile_claims c
+               JOIN players p ON c.player_id = p.id
+               JOIN users u ON c.user_id = u.id WHERE 1=1"""
+    params = []
+    if user_id:
+        query += " AND c.user_id = ?"
+        params.append(user_id)
+    if status:
+        query += " AND c.status = ?"
+        params.append(status)
+    query += " ORDER BY c.created_at DESC"
+    rows = conn.execute(query, params).fetchall()
+    return [dict(r) for r in rows]
+
+def review_profile_claim(conn, claim_id, reviewer_id, status, rejection_reason=None):
+    conn.execute(
+        """UPDATE profile_claims
+           SET status=?, reviewed_by=?, reviewed_at=CURRENT_TIMESTAMP, rejection_reason=?
+           WHERE id=?""",
+        (status, reviewer_id, rejection_reason, claim_id)
+    )
+    if status == "approved":
+        claim = conn.execute("SELECT player_id, user_id FROM profile_claims WHERE id=?", (claim_id,)).fetchone()
+        if claim:
+            conn.execute(
+                """UPDATE public_profiles
+                   SET claimed_by_user_id=?, verified_badge=1, updated_at=CURRENT_TIMESTAMP
+                   WHERE player_id=?""",
+                (claim["user_id"], claim["player_id"])
+            )
+    conn.commit()
+    return True
+
+# ---------- Organization & Team Operations (PRD-ORG-001) ----------
+def create_organization(conn, name, slug, tag, owner_id, description=""):
+    org_id = f"ORG-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        "INSERT INTO organizations(id, name, slug, tag, description, owner_id) VALUES(?,?,?,?,?,?)",
+        (org_id, name.strip(), slug.strip().lower(), tag.strip().upper(), description.strip(), owner_id)
+    )
+    # Add creator as owner member
+    mem_id = f"MEM-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        "INSERT INTO organization_members(id, organization_id, user_id, role) VALUES(?,?,?, 'owner')",
+        (mem_id, org_id, owner_id)
+    )
+    conn.commit()
+    return get_organization(conn, org_id)
+
+def get_organization(conn, org_id_or_slug):
+    org = conn.execute(
+        "SELECT * FROM organizations WHERE id=? OR slug=?",
+        (org_id_or_slug, org_id_or_slug)
+    ).fetchone()
+    if not org:
+        return None
+    d = dict(org)
+    # Fetch members
+    members = conn.execute(
+        """SELECT m.id as membership_id, m.role, m.joined_at, u.id as user_id, u.name, u.username
+           FROM organization_members m
+           JOIN users u ON m.user_id = u.id
+           WHERE m.organization_id = ?
+           ORDER BY m.joined_at ASC""",
+        (d["id"],)
+    ).fetchall()
+    d["members"] = [dict(m) for m in members]
+    return d
+
+def list_user_organizations(conn, user_id):
+    rows = conn.execute(
+        """SELECT o.*, m.role as user_role
+           FROM organizations o
+           JOIN organization_members m ON o.id = m.organization_id
+           WHERE m.user_id = ?
+           ORDER BY o.created_at DESC""",
+        (user_id,)
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+def add_organization_member(conn, org_id, user_id, role="scout"):
+    mem_id = f"MEM-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        """INSERT INTO organization_members(id, organization_id, user_id, role)
+           VALUES(?,?,?,?)
+           ON CONFLICT(organization_id, user_id) DO UPDATE SET role=excluded.role""",
+        (mem_id, org_id, user_id, role)
+    )
+    conn.commit()
+    return True
+
+def create_invitation(conn, org_id, email, role, token, expires_at):
+    inv_id = f"INV-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        "INSERT INTO organization_invitations(id, organization_id, email, role, token, expires_at) VALUES(?,?,?,?,?,?)",
+        (inv_id, org_id, email.strip().lower(), role, token, expires_at)
+    )
+    conn.commit()
+    return inv_id
+
+def get_invitation(conn, token):
+    row = conn.execute(
+        """SELECT inv.*, o.name as organization_name
+           FROM organization_invitations inv
+           JOIN organizations o ON inv.organization_id = o.id
+           WHERE inv.token=? AND inv.status='pending'""",
+        (token,)
+    ).fetchone()
+    return dict(row) if row else None
+
+def accept_invitation(conn, token, user_id):
+    inv = get_invitation(conn, token)
+    if not inv:
+        return False
+    conn.execute("UPDATE organization_invitations SET status='accepted' WHERE token=?", (token,))
+    add_organization_member(conn, inv["organization_id"], user_id, role=inv["role"])
+    conn.commit()
+    return True
+
+# ---------- Shared Scouting Reports (PRD-REP-001) ----------
+def create_shared_report(conn, title, candidate_id, roster_id, share_token, is_public=1, expires_at=None, created_by="USR-001", payload=""):
+    rep_id = f"REP-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        """INSERT INTO shared_reports(id, title, candidate_id, roster_id, share_token, is_public, expires_at, created_by, payload)
+           VALUES(?,?,?,?,?,?,?,?,?)""",
+        (rep_id, title, candidate_id, roster_id, share_token, is_public, expires_at, created_by, payload)
+    )
+    conn.commit()
+    return rep_id
+
+def get_shared_report(conn, share_token):
+    row = conn.execute(
+        """SELECT r.*, p.name as candidate_name, p.game, p.role as candidate_role, u.name as author_name
+           FROM shared_reports r
+           JOIN players p ON r.candidate_id = p.id
+           JOIN users u ON r.created_by = u.id
+           WHERE r.share_token=? AND r.is_revoked=0""",
+        (share_token,)
+    ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["payload"] = json.loads(d["payload"]) if d.get("payload") else {}
+    return d
+
+def revoke_shared_report(conn, share_token, user_id):
+    cur = conn.execute(
+        "UPDATE shared_reports SET is_revoked=1 WHERE share_token=? AND created_by=?",
+        (share_token, user_id)
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+# ---------- Data Correction & Dispute Workflows (PRD-DISP-001) ----------
+def create_correction_request(conn, player_id, user_id, issue_type, description, evidence_url=""):
+    req_id = f"COR-{uuid.uuid4().hex[:8]}"
+    conn.execute(
+        """INSERT INTO data_correction_requests(id, player_id, user_id, issue_type, description, evidence_url, status)
+           VALUES(?,?,?,?,?,?,'pending')""",
+        (req_id, player_id, user_id, issue_type, description.strip(), evidence_url.strip())
+    )
+    conn.commit()
+    return req_id
+
+def list_correction_requests(conn, status=None, player_id=None):
+    query = """SELECT r.*, p.name as player_handle, p.game
+               FROM data_correction_requests r
+               JOIN players p ON r.player_id = p.id WHERE 1=1"""
+    params = []
+    if status:
+        query += " AND r.status = ?"
+        params.append(status)
+    if player_id:
+        query += " AND r.player_id = ?"
+        params.append(player_id)
+    query += " ORDER BY r.created_at DESC"
+    rows = conn.execute(query, params).fetchall()
+    return [dict(row) for row in rows]
+
+def resolve_correction_request(conn, request_id, reviewer_id, status):
+    cur = conn.execute(
+        """UPDATE data_correction_requests
+           SET status=?, reviewed_by=?, reviewed_at=CURRENT_TIMESTAMP
+           WHERE id=?""",
+        (status, reviewer_id, request_id)
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+# ---------- User Data Rights, Export & Account Management (SEC-004) ----------
+def change_user_password(conn, user_id, password_hash, salt):
+    cur = conn.execute(
+        "UPDATE users SET password_hash=?, salt=? WHERE id=?",
+        (password_hash, salt, user_id)
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+def export_user_data(conn, user_id):
+    user_row = conn.execute("SELECT id, username, name, role, organization FROM users WHERE id=?", (user_id,)).fetchone()
+    if not user_row:
+        return None
+    user_data = dict(user_row)
+    
+    # Fetch watchlist
+    watchlist_rows = conn.execute(
+        """SELECT w.id, w.player_id, p.name as player_name, p.game, w.stage, w.notes, w.created_at
+           FROM watchlist_entries w JOIN players p ON w.player_id = p.id
+           WHERE w.user_id = ?""",
+        (user_id,)
+    ).fetchall()
+    user_data["watchlist"] = [dict(r) for r in watchlist_rows]
+
+    # Fetch annotations
+    anno_rows = conn.execute(
+        "SELECT * FROM annotations WHERE annotator LIKE ?",
+        (f"%{user_data['name']}%",)
+    ).fetchall()
+    user_data["scouting_annotations"] = [dict(r) for r in anno_rows]
+
+    # Fetch submitted claims
+    claim_rows = conn.execute(
+        "SELECT * FROM profile_claims WHERE user_id = ?",
+        (user_id,)
+    ).fetchall()
+    user_data["profile_claims"] = [dict(r) for r in claim_rows]
+
+    # Fetch dispute/correction requests
+    corr_rows = conn.execute(
+        "SELECT * FROM data_correction_requests WHERE user_id = ?",
+        (user_id,)
+    ).fetchall()
+    user_data["correction_requests"] = [dict(r) for r in corr_rows]
+
+    return user_data
+
+def delete_user_account(conn, user_id):
+    # Anonymize or remove user while maintaining relational integrity
+    conn.execute("DELETE FROM notifications WHERE user_id=?", (user_id,))
+    conn.execute("DELETE FROM watchlist_entries WHERE user_id=?", (user_id,))
+    conn.execute("DELETE FROM organization_members WHERE user_id=?", (user_id,))
+    cur = conn.execute("DELETE FROM users WHERE id=?", (user_id,))
+    conn.commit()
+    return cur.rowcount > 0
+
+def get_user(conn, user_id: str):
+    row = conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["org"] = d.get("org") or d.get("organization") or "Logic Legend Esports"
+    d["email"] = d.get("email") or f"{d.get('username', 'user')}@goldensnitch.gg"
+    return d
+
+def get_user_by_email(conn, email: str):
+    if not email:
+        return None
+    clean = email.strip().lower()
+    row = conn.execute(
+        "SELECT * FROM users WHERE LOWER(email)=? OR LOWER(username)=?",
+        (clean, clean)
+    ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["org"] = d.get("org") or d.get("organization") or "Logic Legend Esports"
+    d["email"] = d.get("email") or f"{d.get('username', 'user')}@goldensnitch.gg"
+    return d
+
+
+
+
 
 
