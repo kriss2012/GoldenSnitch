@@ -69,31 +69,31 @@ export const AcsComparisonChart: React.FC<AcsComparisonChartProps> = ({
   return (
     <div className="space-y-4">
       {/* Overview Stat Header */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl">
-          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block">Average Combat ACS</span>
+      <div className="grid grid-cols-1 min-[380px]:grid-cols-2 sm:grid-cols-4 gap-2.5 min-w-0">
+        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl min-w-0">
+          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block truncate">Average Combat ACS</span>
           <div className="text-xl font-bold font-mono text-[#82EAF4] mt-0.5">{stats.avgAcs}</div>
-          <span className={`text-[10px] font-semibold ${stats.diffAvg >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+          <span className={`text-[10px] font-semibold block truncate ${stats.diffAvg >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
             {stats.diffAvg >= 0 ? `+${stats.diffAvg}` : stats.diffAvg} vs Role Benchmark
           </span>
         </div>
 
-        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl">
-          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block">Role Par Target</span>
+        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl min-w-0">
+          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block truncate">Role Par Target</span>
           <div className="text-xl font-bold font-mono text-[#D4D4D4] mt-0.5">{roleBenchmark}</div>
-          <span className="text-[10px] text-[#8E8E8E]">{role} Tier-1 Expectancy</span>
+          <span className="text-[10px] text-[#8E8E8E] block truncate">{role} Tier-1 Expectancy</span>
         </div>
 
-        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl">
-          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block">Benchmark Exceed Rate</span>
+        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl min-w-0">
+          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block truncate">Benchmark Exceed Rate</span>
           <div className="text-xl font-bold font-mono text-[#10B981] mt-0.5">{stats.abovePct}%</div>
-          <span className="text-[10px] text-[#8E8E8E]">{chartData.filter(d => d.acs >= roleBenchmark).length}/{chartData.length} Matches Above Par</span>
+          <span className="text-[10px] text-[#8E8E8E] block truncate">{chartData.filter(d => d.acs >= roleBenchmark).length}/{chartData.length} Matches Above Par</span>
         </div>
 
-        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl">
-          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block">Peak Match ACS</span>
+        <div className="p-3 bg-[#171717] border border-[#2B2B2B] rounded-xl min-w-0">
+          <span className="text-[10px] text-[#8E8E8E] uppercase tracking-wider block truncate">Peak Match ACS</span>
           <div className="text-xl font-bold font-mono text-[#9B51E0] mt-0.5">{stats.maxAcs}</div>
-          <span className="text-[10px] text-[#9B51E0] font-medium">Tournament Ceiling</span>
+          <span className="text-[10px] text-[#9B51E0] font-medium block truncate">Tournament Ceiling</span>
         </div>
       </div>
 
