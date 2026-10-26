@@ -118,18 +118,19 @@ export const PlayerProfilePage: React.FC = () => {
       </div>
 
       {/* Profile Header Hero Panel */}
-      <div className="p-6 bg-[#1A1A1A] border border-[#353535] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
-        <div className="flex items-start gap-4">
+      <div className="p-4 sm:p-6 bg-[#1A1A1A] border border-[#353535] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 shadow-xl min-w-0 overflow-hidden">
+        <div className="flex flex-col xs:flex-row items-start gap-3.5 sm:gap-4 min-w-0 flex-1">
           <PlayerAvatar
             handle={player.handle}
             role={player.role}
             game={player.game}
             size="xl"
             showStatus={true}
+            className="shrink-0"
           />
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F5F5] font-heading">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#F5F5F5] font-heading leading-tight break-words">
                 {player.handle}
               </h1>
               <RoleBadge role={player.role} size="md" />
@@ -145,7 +146,7 @@ export const PlayerProfilePage: React.FC = () => {
               </span>
             </div>
 
-            <div className="text-xs text-[#B8B8B8] mt-1.5 flex flex-wrap items-center gap-2">
+            <div className="text-xs text-[#B8B8B8] mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="text-[#F5F5F5] font-medium">{player.realName}</span>
               <span>·</span>
               <span>{player.nationality} ({player.region})</span>
@@ -160,80 +161,88 @@ export const PlayerProfilePage: React.FC = () => {
             </div>
 
             {/* Financial Details */}
-            <div className="text-xs text-[#B8B8B8] mt-2 flex items-center gap-4">
+            <div className="text-xs text-[#B8B8B8] mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
               <span>Est. Salary: <strong className="text-[#F5F5F5]">{formatCurrencyK(player.salaryK)}/yr</strong></span>
               <span>Buyout: <strong className="text-[#F5F5F5]">{player.buyoutUsd || 'None'}</strong></span>
             </div>
           </div>
         </div>
 
-        {/* 48px Talent Index Display */}
-        <div className="flex items-center justify-between md:justify-end gap-6 pt-4 md:pt-0 border-t md:border-t-0 border-[#353535]/50">
-          <div className="text-right">
-            <span className="text-[11px] font-semibold text-[#8E8E8E] uppercase tracking-wider block">
-              Player Talent Index
-            </span>
-            <div
-              className="text-[48px] sm:text-[52px] leading-none font-extrabold font-heading text-[#F5F5F5] tracking-tight tabular-nums"
-              aria-label={`Talent Index: ${player.talentIndex}`}
-            >
-              {animatedIndex.toFixed(1)}
+        {/* Talent Index & Action Buttons */}
+        <div className="flex flex-col sm:flex-row md:flex-row items-stretch sm:items-center justify-between md:justify-end gap-4 sm:gap-6 pt-4 md:pt-0 border-t md:border-t-0 border-[#353535]/50 min-w-0">
+          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2">
+            <div className="text-left sm:text-right">
+              <span className="text-[11px] font-semibold text-[#8E8E8E] uppercase tracking-wider block">
+                Player Talent Index
+              </span>
+              <div
+                className="text-[40px] xs:text-[46px] sm:text-[52px] leading-none font-extrabold font-heading text-[#F5F5F5] tracking-tight tabular-nums mt-0.5"
+                aria-label={`Talent Index: ${player.talentIndex}`}
+              >
+                {animatedIndex.toFixed(1)}
+              </div>
             </div>
-            <div className="mt-1 flex items-center justify-end gap-2">
+            <div className="flex items-center gap-2 mt-1">
               <ConfidenceBadge level={player.confidence} />
               <TrendIndicator trend={player.trend} />
             </div>
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="flex flex-col gap-2 shrink-0">
-            <ShortlistButton player={player} size="md" />
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:flex-col gap-2 w-full sm:w-auto shrink-0">
+            <div className="col-span-1 xs:col-span-2 sm:col-auto w-full">
+              <ShortlistButton player={player} size="md" className="w-full justify-center min-h-[42px]" />
+            </div>
             <Button
               variant="secondary"
               size="sm"
               onClick={() => navigate('/compare')}
+              className="w-full justify-center min-h-[38px]"
             >
-              <Scale size={15} className="mr-1.5" />
-              Compare candidate
+              <Scale size={15} className="mr-1.5 shrink-0" />
+              <span className="truncate">Compare candidate</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowDisputeModal(true)}
+              className="w-full justify-center min-h-[38px]"
             >
-              <AlertTriangle size={14} className="mr-1.5 text-warning" />
-              Dispute Data
+              <AlertTriangle size={14} className="mr-1.5 text-warning shrink-0" />
+              <span className="truncate">Dispute Data</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Tabs Navigation (Exact Midnight Violet Underline pattern) */}
-      <div className="border-b border-border flex items-center gap-2 overflow-x-auto select-none">
-        {[
-          { id: 'overview', label: 'Overview' },
-          { id: 'cognitive', label: 'Cognitive Biometrics' },
-          { id: 'matches', label: `Match history (${player.matchHistory?.length || 0})` },
-          { id: 'situational', label: 'Situational analysis' },
-          { id: 'role', label: 'Role evaluation' },
-          { id: 'trajectory', label: 'Development trajectory' },
-          { id: 'quality', label: 'Data quality' },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-colors relative ${
-              activeTab === tab.id
-                ? 'text-text'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            {tab.label}
-            {activeTab === tab.id && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet" />
-            )}
-          </button>
-        ))}
+      {/* Tabs Navigation (Exact Midnight Violet Underline pattern with touch scrolling) */}
+      <div className="w-full min-w-0 border-b border-border overflow-x-auto overscroll-x-contain select-none scrollbar-none">
+        <div className="flex items-center gap-1 sm:gap-2 w-max min-w-full pb-px">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'cognitive', label: 'Cognitive Biometrics' },
+            { id: 'matches', label: `Match history (${player.matchHistory?.length || 0})` },
+            { id: 'situational', label: 'Situational analysis' },
+            { id: 'role', label: 'Role evaluation' },
+            { id: 'trajectory', label: 'Development trajectory' },
+            { id: 'quality', label: 'Data quality' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-3.5 sm:px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition-colors relative min-h-[44px] flex items-center ${
+                activeTab === tab.id
+                  ? 'text-text'
+                  : 'text-text-muted hover:text-text'
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet shadow-[0_0_8px_var(--violet)]" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* TAB 1: OVERVIEW */}
