@@ -399,14 +399,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#242424]">
-                      <div className="flex flex-col items-start sm:items-end justify-center">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-[#242424]">
+                      <div className="flex items-center sm:flex-col sm:items-end justify-start gap-2 sm:gap-1">
                         <TalentBadge score={cand.talentIndex} size="md" />
-                        <div className="mt-1">
-                          <ConfidenceBadge level={cand.confidence} />
-                        </div>
+                        <ConfidenceBadge level={cand.confidence} />
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <ShortlistButton player={cand} size="sm" />
                         <button
                           type="button"
@@ -414,7 +412,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                             e.stopPropagation();
                             navigate(`/app/players/${cand.id}`);
                           }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#202020] hover:bg-[#282828] text-[#F5F5F5] border border-[#303030] hover:border-[#444444] text-xs font-semibold shadow-sm transition-all shrink-0 min-h-[36px]"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#202020] hover:bg-[#282828] text-[#F5F5F5] border border-[#303030] hover:border-[#444444] text-xs font-semibold shadow-sm transition-all shrink-0 min-h-[36px] flex items-center justify-center whitespace-nowrap"
                         >
                           Dossier
                         </button>
@@ -428,17 +426,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
 
           {/* Real Telemetry Performance Analytics for Selected Candidate */}
           {selectedCandidate && (
-            <div className="bg-[#151515] border border-[#2B2B2B] rounded-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-8 h-8 rounded-lg bg-[#82EAF4]/15 border border-[#82EAF4]/30 flex items-center justify-center text-[#82EAF4]">
+            <div className="bg-[#151515] border border-[#2B2B2B] rounded-2xl p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.5)] min-w-0 overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+                <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                  <span className="w-8 h-8 rounded-lg bg-[#82EAF4]/15 border border-[#82EAF4]/30 flex items-center justify-center text-[#82EAF4] shrink-0 mt-0.5 sm:mt-0">
                     <Target size={16} />
                   </span>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-[#F5F5F5] font-heading">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm sm:text-base font-bold text-[#F5F5F5] font-heading leading-tight break-words">
                       {selectedCandidate.handle} · Combat ACS &amp; Role Benchmark Analysis
                     </h3>
-                    <p className="text-xs text-[#8E8E8E]">
+                    <p className="text-xs text-[#8E8E8E] truncate mt-0.5">
                       Real match data from {selectedCandidate.matchHistory?.length || 5} VCT LAN stages ({selectedCandidate.role})
                     </p>
                   </div>
@@ -447,8 +445,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ selectedGame }) =>
                   variant="secondary"
                   size="sm"
                   onClick={() => navigate(`/app/players/${selectedCandidate.id}`)}
+                  className="w-full sm:w-auto justify-center min-h-[38px] shrink-0"
                 >
-                  Full Profile Dossier <ArrowRight size={13} className="ml-1" />
+                  <span className="truncate">Full Profile Dossier</span>
+                  <ArrowRight size={13} className="ml-1 shrink-0" />
                 </Button>
               </div>
 
