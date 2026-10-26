@@ -36,16 +36,16 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="h-[72px] px-4 md:px-6 bg-[#0E0E0E] border-b border-[#222222] flex items-center justify-between gap-4 sticky top-0 z-30 shrink-0 select-none">
+    <header className="h-16 sm:h-[72px] px-2.5 sm:px-4 md:px-6 bg-[#0E0E0E] border-b border-[#222222] flex items-center justify-between gap-1.5 sm:gap-4 sticky top-0 z-30 shrink-0 select-none min-w-0">
       {/* 1. Left: Sidebar Toggle + Golden Snitch Brand with Emblem */}
-      <div className="flex items-center gap-3.5 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3.5 shrink-0 min-w-0">
         {/* Sidebar Toggle (Mobile + Desktop) */}
         <button
           onClick={onOpenMobileNav}
-          className="lg:hidden w-10 h-10 flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-xl border border-[#2C2C2C] bg-[#181818] shrink-0 transition-colors"
+          className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-[#B8B8B8] hover:text-[#F5F5F5] rounded-xl border border-[#2C2C2C] bg-[#181818] shrink-0 transition-colors"
           aria-label="Open mobile navigation"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
 
         {onToggleDesktopCollapse && (
@@ -62,13 +62,13 @@ export const Topbar: React.FC<TopbarProps> = ({
         {/* Golden Snitch Logo & Brand Title */}
         <div 
           onClick={() => navigate('/app/dashboard')}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer group shrink-0"
           title="Golden Snitch — Esports Intelligence"
         >
           <img
             src="/assets/golden-snitch/golden-snitch-winged.png"
             alt="Golden Snitch"
-            className="h-8 sm:h-9 w-auto max-w-[56px] object-contain drop-shadow-[0_0_12px_rgba(245,184,61,0.55)] group-hover:scale-105 transition-transform"
+            className="h-7 sm:h-9 w-auto max-w-[42px] sm:max-w-[56px] object-contain drop-shadow-[0_0_12px_rgba(245,184,61,0.55)] group-hover:scale-105 transition-transform shrink-0"
           />
           <div className="hidden sm:block">
             <h1 className="text-sm md:text-base font-extrabold italic text-[#F5B83D] tracking-wide font-heading leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
@@ -137,22 +137,22 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       {/* Mobile Title Selector */}
-      <div className="xl:hidden relative shrink-0">
+      <div className="xl:hidden relative shrink-0 max-w-[130px] sm:max-w-[160px]">
         <select
           value={selectedGame}
           onChange={(e) => onSelectGame(e.target.value as GameTitle)}
-          className="h-8.5 pl-2.5 pr-7 rounded-full bg-[#181818] border border-[#303030] text-xs font-bold text-[#82EAF4] focus:outline-none focus:border-[#82EAF4] appearance-none cursor-pointer"
+          className="w-full h-8 pl-2.5 pr-6 rounded-full bg-[#181818] border border-[#303030] text-[11px] sm:text-xs font-bold text-[#82EAF4] focus:outline-none focus:border-[#82EAF4] appearance-none cursor-pointer truncate"
           aria-label="Select game title"
         >
           {SUPPORTED_GAMES.map((g) => (
             <option key={g} value={g} className="bg-[#181818] text-white">{g}</option>
           ))}
         </select>
-        <ChevronDown size={12} className="absolute right-2 top-3 text-[#888888] pointer-events-none" />
+        <ChevronDown size={11} className="absolute right-2 top-2.5 text-[#888888] pointer-events-none" />
       </div>
 
       {/* 3. Right: Wide Global Search Field + Notification Bell + User Profile */}
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Global Search Bar with Ctrl K Badge */}
         <form onSubmit={handleSearchSubmit} className="relative hidden md:flex items-center w-56 lg:w-72 xl:w-80">
           <div className="w-full h-10 pl-9 pr-14 rounded-full bg-[#161616] border border-[#2B2B2B] hover:border-[#3D3D3D] focus-within:border-[#82EAF4] focus-within:ring-1 focus-within:ring-[#82EAF4] transition-all flex items-center">
@@ -178,12 +178,12 @@ export const Topbar: React.FC<TopbarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-2.5 p-1 pr-2 rounded-full bg-[#161616] border border-[#2B2B2B] hover:border-[#82EAF4]/50 transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2.5 p-0.5 sm:p-1 pr-1 sm:pr-2 rounded-full bg-[#161616] border border-[#2B2B2B] hover:border-[#82EAF4]/50 transition-colors"
             aria-label="User account menu"
             aria-expanded={showUserMenu}
           >
             {/* Teal Circular Avatar with M */}
-            <div className="w-8 h-8 rounded-full bg-[#0E7490] border border-[#22D3EE]/30 flex items-center justify-center text-[#FFFFFF] font-bold text-xs shadow-inner">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0E7490] border border-[#22D3EE]/30 flex items-center justify-center text-[#FFFFFF] font-bold text-xs shadow-inner">
               {user?.name ? user.name[0].toUpperCase() : 'M'}
             </div>
 
@@ -196,7 +196,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               </span>
             </div>
 
-            <ChevronDown size={13} className="text-[#888888] ml-0.5" />
+            <ChevronDown size={12} className="text-[#888888] hidden xs:inline-block sm:inline-block ml-0.5" />
           </button>
 
           {showUserMenu && (
