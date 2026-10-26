@@ -30,7 +30,7 @@ export const AppShell: React.FC<AppShellProps> = ({ selectedGame, onSelectGame }
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0B0B0B] text-text font-sans select-none">
+    <div className="flex flex-col h-screen h-[100dvh] w-full max-w-full min-w-0 overflow-hidden bg-[#0B0B0B] text-text font-sans select-none">
       {/* 1. Full-Width Topbar matching Image 1 */}
       <Topbar
         onOpenMobileNav={() => setIsMobileNavOpen(true)}
