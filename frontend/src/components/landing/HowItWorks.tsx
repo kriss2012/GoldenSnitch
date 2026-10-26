@@ -150,13 +150,13 @@ export default function HowItWorks() {
         </div>
 
         {/* Right Column: HUGE Cinematic Esports Photo Cards */}
-        <div className="lg:col-span-8 relative w-full h-[450px] sm:h-[550px] lg:h-[620px] flex items-center justify-center">
+        <div className="lg:col-span-8 relative w-full h-auto lg:h-[620px] flex flex-col lg:block">
           {SCROLL_CHAPTERS.map((ch, i) => (
             <div
               key={ch.title}
-              className="story-image-pane lg:absolute inset-0 w-full h-full rounded-3xl overflow-hidden border border-white/15 bg-[#0E0D0C] p-2 shadow-[0_25px_70px_rgba(0,0,0,0.9)] glow-gold group mb-8 lg:mb-0"
+              className="story-image-pane lg:absolute inset-0 w-full h-[300px] xs:h-[360px] sm:h-[460px] lg:h-full rounded-2xl sm:rounded-3xl overflow-hidden border border-white/15 bg-[#0E0D0C] p-2 shadow-[0_25px_70px_rgba(0,0,0,0.9)] glow-gold group mb-8 lg:mb-0"
             >
-              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-black">
+              <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden bg-black">
                 <Photo
                   src={`/images/${ch.img}`}
                   alt={ch.title}
@@ -165,22 +165,22 @@ export default function HowItWorks() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/30" />
 
                 {/* Top Badge */}
-                <div className="absolute top-4 left-4 font-mono text-[10px] px-3 py-1 rounded bg-black/70 backdrop-blur border border-white/10 flex items-center gap-2">
+                <div className="absolute top-3 xs:top-4 left-3 xs:left-4 font-mono text-[10px] px-2.5 xs:px-3 py-1 rounded bg-black/70 backdrop-blur border border-white/10 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_#F5B83D]" />
                   <span className="text-gold font-bold">{ch.reticle}</span>
                 </div>
 
                 {/* Red-Amber Tactical Reticle from user reference photo */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-16 h-16 border-2 border-[#FF4D4D]/70 rotate-45 flex items-center justify-center shadow-[0_0_20px_rgba(255,77,77,0.5)]">
+                  <div className="w-12 h-12 xs:w-16 xs:h-16 border-2 border-[#FF4D4D]/70 rotate-45 flex items-center justify-center shadow-[0_0_20px_rgba(255,77,77,0.5)]">
                     <div className="w-2.5 h-2.5 bg-gold rounded-full shadow-[0_0_10px_#F5B83D]" />
                   </div>
                 </div>
 
                 {/* Small Bottom Info Bar */}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-neutral-400 bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
-                  <span className="text-white font-medium">{ch.caption}</span>
-                  <span className="text-gold">STAGE 0{i + 1}</span>
+                <div className="absolute bottom-3 xs:bottom-4 left-3 xs:left-4 right-3 xs:right-4 flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-[10px] xs:text-[11px] font-mono text-neutral-400 bg-black/70 backdrop-blur-md px-3 xs:px-4 py-2 rounded-xl border border-white/10">
+                  <span className="text-white font-medium truncate">{ch.caption}</span>
+                  <span className="text-gold shrink-0">STAGE 0{i + 1}</span>
                 </div>
               </div>
             </div>
