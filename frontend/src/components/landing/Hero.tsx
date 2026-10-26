@@ -56,18 +56,18 @@ export default function Hero() {
           </p>
 
           {/* Action CTAs */}
-          <div className="hero-fade mt-6 flex items-center gap-4">
+          <div className="hero-fade mt-6 flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4">
             <Link
               to="/app"
               style={{ backgroundColor: '#F5B83D', color: '#000000' }}
-              className="px-8 py-3.5 rounded-full font-mono text-xs font-black tracking-wider uppercase shadow-[0_0_25px_rgba(245,184,61,0.5)] hover:brightness-110 transition-all inline-flex items-center gap-2"
+              className="min-h-[48px] px-6 sm:px-8 py-3.5 rounded-full font-mono text-xs font-black tracking-wider uppercase shadow-[0_0_25px_rgba(245,184,61,0.5)] hover:brightness-110 transition-all inline-flex items-center justify-center gap-2 whitespace-nowrap"
             >
               LAUNCH PLATFORM →
             </Link>
 
             <a
               href="#story"
-              className="font-mono text-[11px] text-neutral-400 hover:text-gold transition-colors tracking-widest uppercase"
+              className="min-h-[40px] inline-flex items-center justify-center font-mono text-[11px] text-neutral-400 hover:text-gold transition-colors tracking-widest uppercase whitespace-nowrap"
             >
               [ SCROLL TO SCOUT ↓ ]
             </a>
@@ -84,17 +84,17 @@ export default function Hero() {
 
         {/* Right: BIG Cinematic Esports Image Showcase (Dominant Visual) */}
         <div className="lg:col-span-8 order-1 lg:order-2">
-          <div className="hero-image-frame relative w-full h-[420px] sm:h-[520px] lg:h-[620px] rounded-3xl overflow-hidden border border-white/15 bg-[#0E0D0C] p-2 shadow-[0_30px_80px_rgba(0,0,0,0.9)] glow-gold group">
-            <div className="relative w-full h-full rounded-2xl overflow-hidden bg-black">
+          <div className="hero-image-frame relative w-full h-[320px] xs:h-[380px] sm:h-[500px] lg:h-[620px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/15 bg-[#0E0D0C] p-2 shadow-[0_30px_80px_rgba(0,0,0,0.9)] glow-gold group">
+            <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden bg-black">
               <Photo
                 src="/images/team-huddle.webp"
                 alt="Champions squad huddle under arena stadium lights"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                className="w-full h-full object-cover object-[center_35%] group-hover:scale-105 transition-transform duration-1000"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/90 via-transparent to-[#050505]/20" />
 
               {/* Top Minimal Pill */}
-              <div className="absolute top-4 left-4 font-mono text-[10px] px-2.5 py-1 rounded bg-black/70 backdrop-blur border border-white/10 text-gold flex items-center gap-2">
+              <div className="absolute top-3 xs:top-4 left-3 xs:left-4 font-mono text-[10px] px-2.5 py-1 rounded bg-black/70 backdrop-blur border border-white/10 text-gold flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-gold animate-ping" />
                 <span>01 // THE ROSTER CORE</span>
               </div>
@@ -102,16 +102,16 @@ export default function Hero() {
               {/* Red-Amber Tactical Reticle from user reference photo */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="relative flex items-center justify-center">
-                  <div className="w-14 h-14 border-2 border-[#FF4D4D]/80 rotate-45 flex items-center justify-center shadow-[0_0_25px_rgba(255,77,77,0.6)]">
+                  <div className="w-12 h-12 xs:w-14 xs:h-14 border-2 border-[#FF4D4D]/80 rotate-45 flex items-center justify-center shadow-[0_0_25px_rgba(255,77,77,0.6)]">
                     <div className="w-2.5 h-2.5 bg-gold rounded-full shadow-[0_0_12px_#F5B83D]" />
                   </div>
                 </div>
               </div>
 
               {/* Small Minimal Bottom Caption */}
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-neutral-400 bg-black/60 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10">
-                <span className="text-white font-medium">SENTINELS // CHAMPIONS STAGE</span>
-                <span className="text-gold">STAGE 01 OF 04</span>
+              <div className="absolute bottom-3 xs:bottom-4 left-3 xs:left-4 right-3 xs:right-4 flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-[10px] xs:text-[11px] font-mono text-neutral-400 bg-black/70 backdrop-blur-md px-3 xs:px-4 py-2 xs:py-2.5 rounded-xl border border-white/10">
+                <span className="text-white font-medium truncate">SENTINELS // CHAMPIONS STAGE</span>
+                <span className="text-gold shrink-0">STAGE 01 OF 04</span>
               </div>
             </div>
           </div>
