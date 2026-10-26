@@ -118,7 +118,7 @@ export const PlayerProfilePage: React.FC = () => {
       </div>
 
       {/* Profile Header Hero Panel */}
-      <div className="p-4 sm:p-6 bg-[#1A1A1A] border border-[#353535] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6 shadow-xl min-w-0 overflow-hidden">
+      <div className="p-4 sm:p-6 bg-[#1A1A1A] border border-[#353535] rounded-2xl flex flex-col gap-5 shadow-xl min-w-0 overflow-hidden">
         <div className="flex flex-col xs:flex-row items-start gap-3.5 sm:gap-4 min-w-0 flex-1">
           <PlayerAvatar
             handle={player.handle}
@@ -168,50 +168,50 @@ export const PlayerProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Talent Index & Action Buttons */}
-        <div className="flex flex-col sm:flex-row md:flex-row items-stretch sm:items-center justify-between md:justify-end gap-4 sm:gap-6 pt-4 md:pt-0 border-t md:border-t-0 border-[#353535]/50 min-w-0">
-          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2">
-            <div className="text-left sm:text-right">
-              <span className="text-[11px] font-semibold text-[#8E8E8E] uppercase tracking-wider block">
-                Player Talent Index
-              </span>
-              <div
-                className="text-[40px] xs:text-[46px] sm:text-[52px] leading-none font-extrabold font-heading text-[#F5F5F5] tracking-tight tabular-nums mt-0.5"
-                aria-label={`Talent Index: ${player.talentIndex}`}
-              >
-                {animatedIndex.toFixed(1)}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              <ConfidenceBadge level={player.confidence} />
-              <TrendIndicator trend={player.trend} />
+        {/* Row 2: Dedicated Talent Index & Confidence Section */}
+        <div className="p-3.5 sm:p-4 bg-[#141414] border border-[#2B2B2B] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="text-[11px] font-semibold text-[#8E8E8E] uppercase tracking-wider block font-mono">
+              Player Talent Index
+            </span>
+            <div
+              className="text-[44px] sm:text-[52px] leading-none font-extrabold font-heading text-[#F5F5F5] tracking-tight tabular-nums mt-0.5"
+              aria-label={`Talent Index: ${player.talentIndex}`}
+            >
+              {animatedIndex.toFixed(1)}
             </div>
           </div>
+          <div className="flex items-center gap-2.5 pt-1 sm:pt-0">
+            <ConfidenceBadge level={player.confidence} />
+            <TrendIndicator trend={player.trend} />
+          </div>
+        </div>
 
-          {/* Quick Action Buttons */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:flex-col gap-2 w-full sm:w-auto shrink-0">
-            <div className="col-span-1 xs:col-span-2 sm:col-auto w-full">
-              <ShortlistButton player={player} size="md" className="w-full justify-center min-h-[42px]" />
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/compare')}
-              className="w-full justify-center min-h-[38px]"
-            >
-              <Scale size={15} className="mr-1.5 shrink-0" />
-              <span className="truncate">Compare candidate</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDisputeModal(true)}
-              className="w-full justify-center min-h-[38px]"
-            >
-              <AlertTriangle size={14} className="mr-1.5 text-warning shrink-0" />
-              <span className="truncate">Dispute Data</span>
-            </Button>
-          </div>
+        {/* Row 3: Dedicated Action Controls Section (Never overlapping, full width on narrow screens) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full pt-1">
+          <ShortlistButton
+            player={player}
+            size="md"
+            className="w-full justify-center min-h-[44px] text-xs sm:text-sm"
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/compare')}
+            className="w-full justify-center min-h-[44px] text-xs sm:text-sm"
+          >
+            <Scale size={15} className="mr-1.5 shrink-0" />
+            <span className="truncate">Compare candidate</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDisputeModal(true)}
+            className="w-full justify-center min-h-[44px] text-xs sm:text-sm"
+          >
+            <AlertTriangle size={14} className="mr-1.5 text-warning shrink-0" />
+            <span className="truncate">Dispute Data</span>
+          </Button>
         </div>
       </div>
 

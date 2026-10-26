@@ -1,6 +1,32 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
+
+.landing-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.landing-container {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+@media (max-width: 380px) {
+  .landing-container {
+    padding-inline: 12px;
+  }
+}
 
 .grain::after {
   content: "";
